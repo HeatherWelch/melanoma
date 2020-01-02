@@ -2,8 +2,8 @@
 
 # environmentsl datasets
 
-1. Mean annual cloud cover
-Source: https://www.earthenv.org/cloud
+1. Mean annual cloud cover . 
+Source: https://www.earthenv.org/cloud . 
 resolution: 0.008333333, 0.008333333
 type: climatology, 2000-2014
 relevant urls: https://www.earthenv.org/metadata/Cloud_DataDescription.pdf
