@@ -140,7 +140,7 @@ Source: https://data.hrsa.gov/data/download
 type: average 2012-2016  
 other:  
 
-2. Median household income (incm_mn)  
+2. Median household income (incm_mh)  
 Source: https://data.hrsa.gov/data/download  
 type: average 2011-2013  
 other:  
