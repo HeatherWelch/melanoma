@@ -1,6 +1,6 @@
 # melanoma
 
-# environmentsl datasets
+# environmental datasets
 
 1. Mean annual cloud cover (mean_cloud)  
 Source: https://www.earthenv.org/cloud  
@@ -106,3 +106,29 @@ savefile: /Users/heatherwelch/Dropbox/melenoma/environment/raw/uvidcclimyear.hdf
 varname:   
 other:  The clear-sky UV index is the effective UV irradiance (1 unit equals 25 mW/m2) reaching the Earth's surface under clear-sky conditions given for local solar noon, when the Sun is highest in the sky. The UV index is computed from the assimilated global ozone field at local solar noon. With the use of forecast meteorological fields of the ECMWF and data assimilation, KNMI provides a forecast of the ozone fields. Hence, UV index forecasts for today and four days ahead can be made.  
 other 2: DNA-damage. The action spectrum which describes the effect of UV radiation on DNA in the human skin, proposed by R. B. Setlow (1974).  
+
+# medical datasets
+1. Income per capita (incm_pc)  
+Source: https://data.hrsa.gov/data/download  
+type: average 2012-2016  
+other:  
+
+2. Median household income (incm_mn)  
+Source: https://data.hrsa.gov/data/download  
+type: average 2011-2013  
+other:  
+
+3. Dermatologists per 100,000 (derm_pk)  
+Source: https://data.hrsa.gov/data/download  
+type: average 2010, 2015, 2017  
+other:  
+
+4. PCPs in patient care per 100,000 (pcp_pk)  
+Source: https://data.hrsa.gov/data/download  
+type: average 2012-2016  
+other:  
+
+5. Total doctors per 100,000 (docs_pk)  
+Source: https://data.hrsa.gov/data/download  
+type: average 2012-2016  
+other: 
