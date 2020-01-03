@@ -1,6 +1,6 @@
 # melanoma
 
-# environmentsl datasets
+# environmental datasets
 
 1. Mean annual cloud cover
 Source: https://www.earthenv.org/cloud
@@ -18,7 +18,7 @@ type: climatology, 2000-2014
 relevant urls: https://www.earthenv.org/metadata/Cloud_DataDescription.pdf
 savefile: /Users/heatherwelch/Dropbox/melenoma/environment/raw/MODCF_intraannualSD.tif
 varname: MODCF_intraannualSD
-other:  Valid values range from 0-10,000 and need to be multiplied by 0.01 to result in % cloudy days. Values greater than 10,000 are used for fill.
+other:   Values need to be multiplied by 0.01 to recover SD.
 
 3. Mean temperature
 Source: http://chelsa-climate.org/downloads/
@@ -106,3 +106,10 @@ savefile: /Users/heatherwelch/Dropbox/melenoma/environment/raw/uvidcclimyear.hdf
 varname: 
 other:  The clear-sky UV index is the effective UV irradiance (1 unit equals 25 mW/m2) reaching the Earth's surface under clear-sky conditions given for local solar noon, when the Sun is highest in the sky. The UV index is computed from the assimilated global ozone field at local solar noon. With the use of forecast meteorological fields of the ECMWF and data assimilation, KNMI provides a forecast of the ozone fields. Hence, UV index forecasts for today and four days ahead can be made.
 other 2: DNA-damage. The action spectrum which describes the effect of UV radiation on DNA in the human skin, proposed by R. B. Setlow (1974).
+
+
+# county datasets
+1.US counties shapefil
+source: https://catalog.data.gov/dataset/tiger-line-shapefile-2017-nation-u-s-current-county-and-equivalent-national-shapefile
+year: 2017
+savefile:
