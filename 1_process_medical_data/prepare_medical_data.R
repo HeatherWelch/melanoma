@@ -45,7 +45,7 @@ dev.off()
 #http://asdfree.com/area-health-resource-file-ahrf.html
 #https://www.marsja.se/how-to-import-data-reading-sas-files-in-r/
 library(haven)
-a=read_sas("/Users/heatherwelch/Dropbox/melenoma/medical/AHRF_2018-2019_SAS/ahrf2019.sas7bdat")
+a=read_sas("/Users/heatherwelch/Dropbox/melenoma/medical/AHRF_2018-2019/AHRF_2018-2019_SAS/ahrf2019.sas7bdat")
 # dermo=a %>% dplyr::select(f00002,f00012,f1108717,f1108715,f1108710)
 # pcp=a %>% dplyr::select(f00002,f00012,f1467516,f1467515,f1467514,f1467513,f1467512)
 # docs=a %>% dplyr::select(f00002,f00012,f1468116,f1468115,f1468114,f1468113,f1468112)
@@ -76,7 +76,7 @@ b=st_read(glue("{spatial_dir}/AHRF.shp"))
 variable="incm_pc"
 x.var <- rlang::sym(variable)
 
-map=ggplot()+geom_sf(data=b,aes(fill = !!x.var),color = "black", size = 0.4)+ theme(panel.background = element_blank())+ theme(axis.line = element_line(colour = "black"))+
+map=ggplot()+geom_sf(data=b,aes(fill = ntile(!!x.var,100)),color = "black", size = 0.4)+ theme(panel.background = element_blank())+ theme(axis.line = element_line(colour = "black"))+
   ggtitle(variable)+
   scale_fill_gradientn(colours = pals::parula(100),na.value="black")+ coord_sf(xlim = c(-125.0011, -66.9326),ylim = c(24.9493,49.5904))
 
@@ -96,12 +96,12 @@ b=st_read(glue("{spatial_dir}/AHRF.shp"))
 variable="incm_mh"
 x.var <- rlang::sym(variable)
 
-map=ggplot()+geom_sf(data=b,aes(fill = !!x.var),color = "black", size = 0.4)+ theme(panel.background = element_blank())+ theme(axis.line = element_line(colour = "black"))+
+map=ggplot()+geom_sf(data=b,aes(fill = ntile(!!x.var,100)),color = "black", size = 0.4)+ theme(panel.background = element_blank())+ theme(axis.line = element_line(colour = "black"))+
   ggtitle(variable)+
   scale_fill_gradientn(colours = pals::parula(100),na.value="black")+ coord_sf(xlim = c(-125.0011, -66.9326),ylim = c(24.9493,49.5904))
 
 
-png(glue("{outdir}/{variable}.png"),width=36,height=22,units='cm',res=400)
+png(glue("{outdir}/{variable}_2.png"),width=36,height=22,units='cm',res=400)
 par(ps=10)
 par(mar=c(4,4,1,1))
 par(cex=1)
@@ -116,7 +116,7 @@ b=st_read(glue("{spatial_dir}/AHRF.shp"))
 variable="derm_pk"
 x.var <- rlang::sym(variable)
 
-map=ggplot()+geom_sf(data=b,aes(fill = !!x.var),color = "black", size = 0.4)+ theme(panel.background = element_blank())+ theme(axis.line = element_line(colour = "black"))+
+map=ggplot()+geom_sf(data=b,aes(fill = ntile(!!x.var,100)),color = "black", size = 0.4)+ theme(panel.background = element_blank())+ theme(axis.line = element_line(colour = "black"))+
   ggtitle(variable)+
   scale_fill_gradientn(colours = pals::parula(100),na.value="black")+ coord_sf(xlim = c(-125.0011, -66.9326),ylim = c(24.9493,49.5904))
 
@@ -136,7 +136,7 @@ b=st_read(glue("{spatial_dir}/AHRF.shp"))
 variable="pcp_pk"
 x.var <- rlang::sym(variable)
 
-map=ggplot()+geom_sf(data=b,aes(fill = !!x.var),color = "black", size = 0.4)+ theme(panel.background = element_blank())+ theme(axis.line = element_line(colour = "black"))+
+map=ggplot()+geom_sf(data=b,aes(fill = ntile(!!x.var,100)),color = "black", size = 0.4)+ theme(panel.background = element_blank())+ theme(axis.line = element_line(colour = "black"))+
   ggtitle(variable)+
   scale_fill_gradientn(colours = pals::parula(100),na.value="black")+ coord_sf(xlim = c(-125.0011, -66.9326),ylim = c(24.9493,49.5904))
 
@@ -156,7 +156,7 @@ b=st_read(glue("{spatial_dir}/AHRF.shp"))
 variable="docs_pk"
 x.var <- rlang::sym(variable)
 
-map=ggplot()+geom_sf(data=b,aes(fill = !!x.var),color = "black", size = 0.4)+ theme(panel.background = element_blank())+ theme(axis.line = element_line(colour = "black"))+
+map=ggplot()+geom_sf(data=b,aes(fill = ntile(!!x.var,100)),color = "black", size = 0.4)+ theme(panel.background = element_blank())+ theme(axis.line = element_line(colour = "black"))+
   ggtitle(variable)+
   scale_fill_gradientn(colours = pals::parula(100),na.value="black")+ coord_sf(xlim = c(-125.0011, -66.9326),ylim = c(24.9493,49.5904))
 

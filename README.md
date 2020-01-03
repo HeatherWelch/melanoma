@@ -107,6 +107,33 @@ varname:
 other:  The clear-sky UV index is the effective UV irradiance (1 unit equals 25 mW/m2) reaching the Earth's surface under clear-sky conditions given for local solar noon, when the Sun is highest in the sky. The UV index is computed from the assimilated global ozone field at local solar noon. With the use of forecast meteorological fields of the ECMWF and data assimilation, KNMI provides a forecast of the ozone fields. Hence, UV index forecasts for today and four days ahead can be made.  
 other 2: DNA-damage. The action spectrum which describes the effect of UV radiation on DNA in the human skin, proposed by R. B. Setlow (1974).  
 
+13.  ANNUAL AVERAGE SUNLIGHT EXPOSURE MEASURED BY SOLAR IRRADIANCE (KJ/M2)  (sun_exposure)
+Source: https://data.cdc.gov/Environmental-Health-Toxicology/Population-Weighted-Global-Horizontal-Irradiance-1/fdyw-m38t  
+Source 2: https://ephtracking.cdc.gov/DataExplorer/#/  
+resolution: county  
+type: climatology, 1991-2012  
+savefile: /Users/heatherwelch/Dropbox/melenoma/environment/raw/sunlight_exposure_solar_irradiance_kjm2/data_132939.csv  
+other: https://ephtracking.cdc.gov/showUVTracking  
+units: kj/m2 
+
+14. Population-Weighted Ultraviolet Irradiance (erythemally weighted daily dose)  (UV_daily_dose)
+Source: https://data.cdc.gov/Environmental-Health-Toxicology/Population-Weighted-Ultraviolet-Irradiance-2004-20/h28b-t43q  
+Source 2: https://ephtracking.cdc.gov/DataExplorer/#/  
+resolution: county  
+type: climatology, 2004-2015  
+savefile: /Users/heatherwelch/Dropbox/melenoma/environment/raw/Daily_dose_UV_irradiance_jm2/data_132536.csv  
+other: https://ephtracking.cdc.gov/showUVTracking  
+units:  J/m2 
+
+15. Population-Weighted Ultraviolet Irradiance (erythemally weighted irradiance at local solar noon time) (UV_irradiance)   
+Source: https://data.cdc.gov/Environmental-Health-Toxicology/Population-Weighted-Ultraviolet-Irradiance-2004-20/h28b-t43q  
+Source 2: https://ephtracking.cdc.gov/DataExplorer/#/  
+resolution: county  
+type: climatology, 2004-2015  
+savefile: Users/heatherwelch/Dropbox/melenoma/environment/raw/UV_irradiance_wmm2/data_132635.csv  
+other: https://ephtracking.cdc.gov/showUVTracking  
+units: Mw/m2  
+
 # medical datasets
 1. Income per capita (incm_pc)  
 Source: https://data.hrsa.gov/data/download  
