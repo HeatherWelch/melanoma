@@ -159,3 +159,13 @@ other:
 Source: https://data.hrsa.gov/data/download  
 type: average 2012-2016  
 other: 
+
+6. Percent of Non Hispanic White households earning over $50,000 (wpovr50)  
+Source: https://data.hrsa.gov/data/download  
+type: average 2011-2017  
+other: 
+
+7. Percent of Non Hispanic White households earning over $100,000 (wpvr100)   
+Source: https://data.hrsa.gov/data/download  
+type: average 2011-2017  
+other: 
