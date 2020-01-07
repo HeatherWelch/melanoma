@@ -81,3 +81,20 @@ gap_brt_poiss_step = gbm.step(master,gbm.x=gbm.x,gbm.y="SEER_rate",family=family
 summary(gap_brt_poiss_step)
 gbm.plot(gap_brt_poiss_step)
 dev_eval2(gap_brt_poiss_step)
+
+
+g=master[complete.cases(master),] %>% dplyr::select(-c(Pop,COUNTY_FIPS,NAME)) %>% dplyr::select(seasonality_temperature,UV_daily_dose,elevation,incm_mh,derm_pk)
+
+head(g)
+
+M <- cor(g)
+corrplot(M,type="upper",order="hclust",outline = T,tl.col="black",tl.cex = .9)
+
+gam.mod1 <- mgcv::gam(SEER_rate~s(seasonality_temperature, bs="ts")+s(UV_daily_dose, bs="ts")+s(elevation, bs="ts")+s(incm_mh, bs="ts")+ s(derm_pk, bs="ts"),family=poisson, data=master, method = "REML", select = T)
+gam.mod1a <- mgcv::gam(SEER_rate~s(seasonality_temperature, bs="ts")+s(UV_daily_dose, bs="ts")+s(elevation, bs="ts")+ s(derm_pk, bs="ts"),family=poisson, data=master, method = "REML", select = T)
+
+
+
+gam.mod2 <- mgcv::gamm(SEER_rate~s(seasonality_temperature, bs="ts")+s(UV_daily_dose, bs="ts")+s(elevation, bs="ts")+s(incm_mh, bs="ts")+ s(derm_pk, bs="ts"),family=poisson, data=master, method = "REML", select = T)
+gam.mod2 <- mgcv::gamm(SEER_rate~s(UV_daily_dose, bs="ts")+s(elevation, bs="ts")+s(incm_mh, bs="ts")+ s(derm_pk, bs="ts"),family=poisson, data=master, method = "REML", select = T)
+
