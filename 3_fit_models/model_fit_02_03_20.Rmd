@@ -275,7 +275,7 @@ plot(a,pages=1,all.terms=T)
 source('/Users/heatherwelch/Dropbox/melenoma/melanoma_GitHub/utilities/load_libraries.R')
 # library(gam)
 library(mgcv)
-modDF=read.csv("/Users/heatherwelch/Dropbox/melenoma/melanoma_GitHub/model_data/data_01_30_20.csv")
+modDF=read.csv("/Users/heatherwelch/Dropbox/melenoma/melanoma_GitHub/model_data/data_01_30_20_withpop_FIPS.csv")
 
 #most curvey
 a1=mgcv::gam(SEER_rate~+s(anRange_temperature,k=5)+s(cancer_gov_UV_exposure,k=5)+s(mean_cloud,k=5)+s(elevation,k=5)+s(mean_temperature,k=5)+s(seasonality_cloud,k=5)+s(seasonality_temperature,k=5)+s(sun_exposure,k=5)+s(UV_daily_dose,k=5)+s(UV_irradiance,k=5),data=modDF,family=gaussian)
@@ -290,5 +290,33 @@ a3=mgcv::gam(SEER_rate~+s(anRange_temperature,bs="ts")+s(cancer_gov_UV_exposure,
 a4=mgcv::gam(SEER_rate~+anRange_temperature+cancer_gov_UV_exposure+mean_cloud+elevation+mean_temperature+seasonality_cloud+seasonality_temperature+sun_exposure+UV_daily_dose+UV_irradiance,data=modDF,family=gaussian)
 
 a=predict(a1,type="response")
+b=predict(a2,type="response")
+c=predict(a3,type="response")
+d=predict(a4,type="response")
+
+master=modDF %>% mutate(model1E=a) %>% mutate(model2E=b) %>% mutate(model3E=c) %>% mutate(model4E=d)
+
+#most curvey
+a1=mgcv::gam(SEER_rate~+s(incm_pc,k=5)+s(wpovr50,k=5)+s(incm_mh,k=5)+s(derm_pk,k=5)+s(pcp_pk,k=5)+s(docs_pk,k=5)+s(wpvr100,k=5),data=modDF,family=gaussian)
+
+#less curvey
+a2=mgcv::gam(SEER_rate~+s(incm_pc,k=2)+s(wpovr50,k=2)+s(incm_mh,k=2)+s(derm_pk,k=2)+s(pcp_pk,k=2)+s(docs_pk,k=2)+s(wpvr100,k=2),data=modDF,family=gaussian)
+
+#optimize curvey
+a3=mgcv::gam(SEER_rate~+s(incm_pc,bs="ts")+s(wpovr50,bs="ts")+s(incm_mh,bs="ts")+s(derm_pk,bs="ts")+s(pcp_pk,bs="ts")+s(docs_pk,bs="ts")+s(wpvr100,bs="ts"),data=modDF,family=gaussian)
+
+#linear
+a4=mgcv::gam(SEER_rate~+incm_pc+wpovr50+incm_mh+derm_pk+pcp_pk+docs_pk+wpvr100,data=modDF,family=gaussian)
+
+a=predict(a1,type="response")
+b=predict(a2,type="response")
+c=predict(a3,type="response")
+d=predict(a4,type="response")
+
+master=master %>% mutate(model1M=a) %>% mutate(model2M=b) %>% mutate(model3M=c) %>% mutate(model4M=d)
+
+write.csv(master,"/Users/heatherwelch/Dropbox/melenoma/melanoma_GitHub/model_data/model_predict_data_02_04_20.csv")
+
+
 ```
 

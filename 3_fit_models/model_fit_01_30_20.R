@@ -33,6 +33,14 @@ descdist(modDF$SEER_rate)
 library(caret)
 varImp(a)
 
+##autocorrelation
+acf(a$residuals)
+
+#overdispersion #aim for <1
+e <- resid(a,type="pearson")
+N <- nrow(modDF)
+p <- length(coef(a))
+sum(e^2)/(N-p)
 
 a=gam(SEER_rate~s(incm_pc,bs="ts")+s(wpovr50,bs="ts")+s(incm_mh,bs="ts")+s(derm_pk,bs="ts")+s(pcp_pk,bs="ts")+s(docs_pk,bs="ts")+s(wpvr100,bs="ts"),data=modDF)
 summary(a)
