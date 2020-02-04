@@ -1,0 +1,294 @@
+---
+title: "Model fitting 02_03_20"
+author: "Heather Welch"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data
+
+Environmental data (n=10)
+Medical data (n=7)
+
+You can find metadata here: https://github.com/HeatherWelch/melanoma
+
+# Different wiggly GAMs  
+## environment
+
+```{r, message=FALSE,warning=F}
+source('/Users/heatherwelch/Dropbox/melenoma/melanoma_GitHub/utilities/load_libraries.R')
+# library(gam)
+library(mgcv)
+modDF=read.csv("/Users/heatherwelch/Dropbox/melenoma/melanoma_GitHub/model_data/data_01_30_20.csv")
+
+#most curvey
+a1=mgcv::gam(SEER_rate~+s(anRange_temperature,k=5)+s(cancer_gov_UV_exposure,k=5)+s(mean_cloud,k=5)+s(elevation,k=5)+s(mean_temperature,k=5)+s(seasonality_cloud,k=5)+s(seasonality_temperature,k=5)+s(sun_exposure,k=5)+s(UV_daily_dose,k=5)+s(UV_irradiance,k=5),data=modDF,family=gaussian)
+
+#less curvey
+a2=mgcv::gam(SEER_rate~+s(anRange_temperature,k=2)+s(cancer_gov_UV_exposure,k=2)+s(mean_cloud,k=2)+s(elevation,k=2)+s(mean_temperature,k=2)+s(seasonality_cloud,k=2)+s(seasonality_temperature,k=2)+s(sun_exposure,k=2)+s(UV_daily_dose,k=2)+s(UV_irradiance,k=2),data=modDF,family=gaussian)
+
+#optimize curvey
+a3=mgcv::gam(SEER_rate~+s(anRange_temperature,bs="ts")+s(cancer_gov_UV_exposure,bs="ts")+s(mean_cloud,bs="ts")+s(elevation,bs="ts")+s(mean_temperature,bs="ts")+s(seasonality_cloud,bs="ts")+s(seasonality_temperature,bs="ts")+s(sun_exposure,bs="ts")+s(UV_daily_dose,bs="ts")+s(UV_irradiance,bs="ts"),data=modDF,family=gaussian)
+
+#linear
+a4=mgcv::gam(SEER_rate~+anRange_temperature+cancer_gov_UV_exposure+mean_cloud+elevation+mean_temperature+seasonality_cloud+seasonality_temperature+sun_exposure+UV_daily_dose+UV_irradiance,data=modDF,family=gaussian)
+
+### plots
+master=list(a1,a2,a3,a4)
+master_list=list()
+for(i in 1:4){
+  mod=master[i]
+  if(i<4){
+  a=plot(mod[[1]],residuals=F,se=T,all.terms=T,pages = 1)
+    for(ii in 1:nrow(summary(a))){
+     c=a[ii]
+     x=c[[1]]$x
+     y=c[[1]]$fit
+     se=c[[1]]$se
+     name=c[[1]]$xlab
+     mod=rep(i,100)
+     d=data.frame(x=x,y=y,upper=y+se,lower=y-se,name=name,Model=mod) 
+     master_list[[length(master_list)+1]]=d
+    }
+  }
+  if(i==4){
+    dd=termplot(mod[[1]],plot=F)
+    for(ii in 1:nrow(summary(dd))){
+     c=dd[ii] %>% as.data.frame() 
+     colnames(c)=c("x","y")
+     x=c$x
+     y=c$y
+     # se=rep(0,109)
+     name=as.data.frame(summary(dd))[ii,1]
+     name=rep(name,length(x))
+     mod=rep(i,length(y))
+     d=data.frame(x=x,y=y,upper=y,lower=y,name=name,Model=mod) 
+     master_list[[length(master_list)+1]]=d
+    }
+  }
+    
+}
+c=do.call("rbind",master_list) %>% mutate(Model=as.factor(Model))
+
+d=c %>% filter(name=="anRange_temperature")
+ggplot(c,aes(x=x,y=y))+geom_line(aes(group=Model,color=Model))+geom_ribbon(aes(group=Model,ymin=lower,ymax=upper,fill=Model),alpha=.2)+facet_wrap(~name,scales="free")+
+  scale_color_manual("Model",values=c("1"="red","2"="blue","3"="black","4"="green"))+scale_fill_manual("",values=c("1"="red","2"="blue","3"="black","4"="green"))+ylim(c(-800,600))
+
+master=list(a1,a2,a3,a4)
+master_list=list()
+
+for(i in 1:4){
+  mod=master[i]
+  a=anova(mod[[1]])
+    if(i<4){
+  edf=a$edf
+  ref.df=a$residual.df
+  p=a$s.pv
+  names=dimnames(a$chi.sq) 
+  mod=rep(i,length(p))
+  rsq=rep(a$r.sq,length(p))
+  d=data.frame(EDF=edf,resDF=ref.df,Pvalue=p,Name=names,Model=mod,Rsq=rsq) 
+  names(d)=c("EDF","resDF","Pvalue","Name","Model","Rsq")
+  master_list[[length(master_list)+1]]=d
+    }
+    if(i==4){
+     edf=rep(1,10)
+  ref.df=rep(NA,10)
+  p=a$pTerms.pv %>% as.data.frame()
+  names=rownames(p) 
+  rsq=rep(a$r.sq,10)
+  mod=rep(i,length(p))
+  d=data.frame(EDF=edf,resDF=ref.df,Pvalue=p,Name=names,Model=mod,Rsq=rsq) 
+  names(d)=c("EDF","resDF","Pvalue","Name","Model","Rsq")
+  master_list[[length(master_list)+1]]=d 
+    }
+}
+
+c=do.call("rbind",master_list) %>% mutate(Model=as.factor(Model))
+c=c %>% mutate(Name=rep(rownames(p),4))
+dEnvironement=c %>% group_by(Model) %>% arrange(Pvalue) %>% mutate(Rank=1:10) %>% as.data.frame() %>% arrange(as.numeric(Model)) %>% mutate(VarType="Environment")#%>% filter(Rank<6)
+
+ggplot(d,aes(x=Name,y=Pvalue))+geom_bar(stat="identity")
+ggplot(d,aes(x=Name,y=log(Pvalue)))+geom_point(aes(color=Name,shape=Model))
+test=d %>% group_by(Name) %>% summarise(count=n()) %>% arrange()
+
+```
+
+## medical  
+
+```{r, message=FALSE,warning=F}
+source('/Users/heatherwelch/Dropbox/melenoma/melanoma_GitHub/utilities/load_libraries.R')
+# library(gam)
+library(mgcv)
+modDF=read.csv("/Users/heatherwelch/Dropbox/melenoma/melanoma_GitHub/model_data/data_01_30_20.csv")
+
+#most curvey
+a1=mgcv::gam(SEER_rate~+s(incm_pc,k=5)+s(wpovr50,k=5)+s(incm_mh,k=5)+s(derm_pk,k=5)+s(pcp_pk,k=5)+s(docs_pk,k=5)+s(wpvr100,k=5),data=modDF,family=gaussian)
+
+#less curvey
+a2=mgcv::gam(SEER_rate~+s(incm_pc,k=2)+s(wpovr50,k=2)+s(incm_mh,k=2)+s(derm_pk,k=2)+s(pcp_pk,k=2)+s(docs_pk,k=2)+s(wpvr100,k=2),data=modDF,family=gaussian)
+
+#optimize curvey
+a3=mgcv::gam(SEER_rate~+s(incm_pc,bs="ts")+s(wpovr50,bs="ts")+s(incm_mh,bs="ts")+s(derm_pk,bs="ts")+s(pcp_pk,bs="ts")+s(docs_pk,bs="ts")+s(wpvr100,bs="ts"),data=modDF,family=gaussian)
+
+#linear
+a4=mgcv::gam(SEER_rate~+incm_pc+wpovr50+incm_mh+derm_pk+pcp_pk+docs_pk+wpvr100,data=modDF,family=gaussian)
+
+### plots
+master=list(a1,a2,a3,a4)
+master_list=list()
+for(i in 1:4){
+  mod=master[i]
+  if(i<4){
+  a=plot(mod[[1]],residuals=F,se=T,all.terms=T,pages = 1)
+    for(ii in 1:nrow(summary(a))){
+     c=a[ii]
+     x=c[[1]]$x
+     y=c[[1]]$fit
+     se=c[[1]]$se
+     name=c[[1]]$xlab
+     mod=rep(i,100)
+     d=data.frame(x=x,y=y,upper=y+se,lower=y-se,name=name,Model=mod) 
+     master_list[[length(master_list)+1]]=d
+    }
+  }
+  if(i==4){
+    dd=termplot(mod[[1]],plot=F)
+    for(ii in 1:nrow(summary(dd))){
+     c=dd[ii] %>% as.data.frame() 
+     colnames(c)=c("x","y")
+     x=c$x
+     y=c$y
+     # se=rep(0,109)
+     name=as.data.frame(summary(dd))[ii,1]
+     name=rep(name,length(x))
+     mod=rep(i,length(y))
+     d=data.frame(x=x,y=y,upper=y,lower=y,name=name,Model=mod) 
+     master_list[[length(master_list)+1]]=d
+    }
+  }
+    
+}
+c=do.call("rbind",master_list) %>% mutate(Model=as.factor(Model))
+
+d=c %>% filter(name=="anRange_temperature")
+ggplot(c,aes(x=x,y=y))+geom_line(aes(group=Model,color=Model))+geom_ribbon(aes(group=Model,ymin=lower,ymax=upper,fill=Model),alpha=.2)+facet_wrap(~name,scales="free")+
+  scale_color_manual("Model",values=c("1"="red","2"="blue","3"="black","4"="green"))+scale_fill_manual("",values=c("1"="red","2"="blue","3"="black","4"="green"))+ylim(c(-50,60))
+
+master=list(a1,a2,a3,a4)
+master_list=list()
+
+for(i in 1:4){
+  mod=master[i]
+  a=anova(mod[[1]])
+    if(i<4){
+  edf=a$edf
+  ref.df=a$residual.df
+  p=a$s.pv
+  names=dimnames(a$chi.sq) 
+  mod=rep(i,length(p))
+  rsq=rep(a$r.sq,length(p))
+  d=data.frame(EDF=edf,resDF=ref.df,Pvalue=p,Name=names,Model=mod,Rsq=rsq) 
+  names(d)=c("EDF","resDF","Pvalue","Name","Model","Rsq")
+  master_list[[length(master_list)+1]]=d
+    }
+    if(i==4){
+     edf=rep(1,7)
+  ref.df=rep(NA,7)
+  p=a$pTerms.pv %>% as.data.frame()
+  names=rownames(p) 
+  rsq=rep(a$r.sq,7)
+  mod=rep(i,length(p))
+  d=data.frame(EDF=edf,resDF=ref.df,Pvalue=p,Name=names,Model=mod,Rsq=rsq) 
+  names(d)=c("EDF","resDF","Pvalue","Name","Model","Rsq")
+  master_list[[length(master_list)+1]]=d 
+    }
+}
+
+c=do.call("rbind",master_list) %>% mutate(Model=as.factor(Model))
+c=c %>% mutate(Name=rep(rownames(p),4))
+dMedical=c %>% group_by(Model) %>% arrange(Pvalue) %>% mutate(Rank=1:7) %>% as.data.frame() %>% arrange(as.numeric(Rank)) %>% mutate(VarType="Medical") #%>% filter(Rank<6)
+
+master=rbind(dEnvironement,dMedical)
+write.csv(master,"/Users/heatherwelch/Dropbox/melenoma/melanoma_GitHub/model_data/resultsdata_02_03_20,csv")
+ggplot(master,aes(y=Rsq,x=as.factor(Model)))+geom_point((aes(color=VarType)))
+m1=master %>% group_by(Name,VarType) %>% summarise(sum=mean(Pvalue)) %>% arrange(sum)
+m1=master %>% filter(Rank<6) %>% arrange(Rank) %>% filter(VarType=="Environment") %>% group_by(Name) %>% summarise(Rank_count=n()) %>% arrange(Rank_count)
+m2=master %>% filter(Rank<6) %>% arrange(Rank) %>% filter(VarType=="Medical") %>% group_by(Name) %>% summarise(Rank_count=n()) %>% arrange(Rank_count)
+
+ggplot(master,aes(y=Rank,x=Model))+geom_line((aes(group=Name,color=Name)))
+
+```
+
+## playing with the data to learn how to build these models
+
+```{r cars, message=FALSE,warning=F}
+source('/Users/heatherwelch/Dropbox/melenoma/melanoma_GitHub/utilities/load_libraries.R')
+library(gam)
+modDF=read.csv("/Users/heatherwelch/Dropbox/melenoma/melanoma_GitHub/model_data/data_01_30_20.csv")
+
+a=gam::gam(SEER_rate~anRange_temperature+cancer_gov_UV_exposure+mean_cloud+elevation+mean_temperature+seasonality_cloud+seasonality_temperature+sun_exposure+UV_daily_dose+UV_irradiance,data=modDF,family=gaussian)
+
+a=gam::gam(SEER_rate~1,data=modDF,family=gaussian)
+
+step.object <-step.Gam(a, scope=list("anRange_temperature"=~1+anRange_temperature+s(anRange_temperature,df=5),"cancer_gov_UV_exposure"=~1+cancer_gov_UV_exposure+s(cancer_gov_UV_exposure,df=5),"mean_cloud"=~1+mean_cloud+s(mean_cloud),"elevation"=~1+elevation+s(elevation,df=5),"mean_temperature"=~1+mean_temperature+s(mean_temperature,df=5),"seasonality_cloud"=~1+seasonality_cloud+s(seasonality_cloud,df=5),"seasonality_temperature"=~1+seasonality_temperature+s(seasonality_temperature,df=5),"sun_exposure"=~1+sun_exposure+s(sun_exposure,df=5),"UV_daily_dose"=~1+UV_daily_dose+s(UV_daily_dose,df=5),"UV_irradiance"=~1+UV_irradiance+s(UV_irradiance,df=5)),trace = 2)
+
+a# a=gam(SEER_rate~anRange_temperature+cancer_gov_UV_exposure+mean_cloud+elevation+mean_temperature+seasonality_cloud+seasonality_temperature+sun_exposure+UV_daily_dose+UV_irradiance,data=modDF)
+
+a=mgcv::gam(SEER_rate~+s(anRange_temperature,k=5)+s(cancer_gov_UV_exposure,k=5)+s(mean_cloud,k=5)+s(elevation,k=5)+s(mean_temperature,k=5)+s(seasonality_cloud,k=5)+s(seasonality_temperature,k=5)+s(sun_exposure,k=5)+s(UV_daily_dose,k=5)+s(UV_irradiance,k=5),data=modDF,family=gaussian)
+anova.gam(a)
+plot(a)
+
+a=mgcv::gam(SEER_rate~+s(anRange_temperature,k=5,bs="ts")+s(cancer_gov_UV_exposure,k=5,bs="ts")+s(mean_cloud,k=5,bs="ts")+s(elevation,k=5,bs="ts")+s(mean_temperature,k=5,bs="ts")+s(seasonality_cloud,k=5,bs="ts")+s(seasonality_temperature,k=5,bs="ts")+s(sun_exposure,k=5,bs="ts")+s(UV_daily_dose,k=5,bs="ts")+s(UV_irradiance,k=5,bs="ts"),data=modDF,family=gaussian)
+anova.gam(a)
+b=plot(a,pages=1,residuals=F,scheme=3,se=T)
+c=b[1]
+x=c[[1]]$x
+y=c[[1]]$fit
+se=c[[1]]$se
+d=data.frame(x=x,y=y,upper=y+se,lower=y-se)
+ggplot(d,aes(x=x,y=y))+geom_line(color="red")+geom_ribbon(aes(ymin=lower,ymax=upper),alpha=.2)
+
+a=mgcv::gam(SEER_rate~+s(anRange_temperature,k=2)+s(cancer_gov_UV_exposure,k=2)+s(mean_cloud,k=2)+s(elevation,k=2)+s(mean_temperature,k=2)+s(seasonality_cloud,k=2)+s(seasonality_temperature,k=2)+s(sun_exposure,k=2)+s(UV_daily_dose,k=2)+s(UV_irradiance,k=2),data=modDF,family=gaussian)
+anova.gam(a)
+plot(a,pages=1)
+
+a=mgcv::gam(SEER_rate~+anRange_temperature+cancer_gov_UV_exposure+mean_cloud+elevation+mean_temperature+seasonality_cloud+seasonality_temperature+sun_exposure+UV_daily_dose+UV_irradiance,data=modDF,family=gaussian)
+anova.gam(a)
+plot(a,pages=1,all.terms=T)
+
+
+
+```
+
+## predicting each back out on a map
+
+### environmental
+```{r}
+source('/Users/heatherwelch/Dropbox/melenoma/melanoma_GitHub/utilities/load_libraries.R')
+# library(gam)
+library(mgcv)
+modDF=read.csv("/Users/heatherwelch/Dropbox/melenoma/melanoma_GitHub/model_data/data_01_30_20.csv")
+
+#most curvey
+a1=mgcv::gam(SEER_rate~+s(anRange_temperature,k=5)+s(cancer_gov_UV_exposure,k=5)+s(mean_cloud,k=5)+s(elevation,k=5)+s(mean_temperature,k=5)+s(seasonality_cloud,k=5)+s(seasonality_temperature,k=5)+s(sun_exposure,k=5)+s(UV_daily_dose,k=5)+s(UV_irradiance,k=5),data=modDF,family=gaussian)
+
+#less curvey
+a2=mgcv::gam(SEER_rate~+s(anRange_temperature,k=2)+s(cancer_gov_UV_exposure,k=2)+s(mean_cloud,k=2)+s(elevation,k=2)+s(mean_temperature,k=2)+s(seasonality_cloud,k=2)+s(seasonality_temperature,k=2)+s(sun_exposure,k=2)+s(UV_daily_dose,k=2)+s(UV_irradiance,k=2),data=modDF,family=gaussian)
+
+#optimize curvey
+a3=mgcv::gam(SEER_rate~+s(anRange_temperature,bs="ts")+s(cancer_gov_UV_exposure,bs="ts")+s(mean_cloud,bs="ts")+s(elevation,bs="ts")+s(mean_temperature,bs="ts")+s(seasonality_cloud,bs="ts")+s(seasonality_temperature,bs="ts")+s(sun_exposure,bs="ts")+s(UV_daily_dose,bs="ts")+s(UV_irradiance,bs="ts"),data=modDF,family=gaussian)
+
+#linear
+a4=mgcv::gam(SEER_rate~+anRange_temperature+cancer_gov_UV_exposure+mean_cloud+elevation+mean_temperature+seasonality_cloud+seasonality_temperature+sun_exposure+UV_daily_dose+UV_irradiance,data=modDF,family=gaussian)
+
+a=predict(a1,type="response")
+```
+

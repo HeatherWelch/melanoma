@@ -1,0 +1,558 @@
+---
+title: "Model fitting 01_30_20"
+author: "Heather Welch"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data
+
+Environmental data (n=10)
+Medical data (n=7)
+
+You can find metadata here: https://github.com/HeatherWelch/melanoma
+
+## Scatterplots
+With individual linear models fit to each pair
+
+```{r cars, message=FALSE,warning=F}
+source('/Users/heatherwelch/Dropbox/melenoma/melanoma_GitHub/utilities/load_libraries.R')
+modDF=read.csv("/Users/heatherwelch/Dropbox/melenoma/melanoma_GitHub/model_data/data_01_30_20.csv")
+env=modDF %>% dplyr::select(SEER_rate,anRange_temperature,cancer_gov_UV_exposure,mean_cloud,elevation,mean_temperature,seasonality_cloud,seasonality_temperature,sun_exposure,UV_daily_dose,UV_irradiance)
+master_env=env %>% gather(variable, value,-SEER_rate)
+
+C3=ggplot(master_env,aes(x=SEER_rate,y=value),color="black")+geom_point(size=1)+stat_smooth(se=F,method = "lm",formula = y~x)+
+  theme(text = element_text(size=8),axis.text = element_text(size=8),plot.title = element_text(hjust=0,size=8),legend.position=c(.15,.3),legend.justification = c(.9,.9),legend.key.size = unit(.5,'lines'))+
+  theme(legend.background = element_blank(),legend.box.background = element_rect(colour = NA),legend.margin=unit(0.3, "lines"))+theme_classic()+
+  ggtitle("Environment")+
+  ylab("Predictor")+xlab("Melanoma rate")+facet_wrap(~variable,scales="free")
+
+C3
+
+jur=modDF %>% dplyr::select(-c(anRange_temperature,cancer_gov_UV_exposure,mean_cloud,elevation,mean_temperature,seasonality_cloud,seasonality_temperature,sun_exposure,UV_daily_dose,UV_irradiance))
+master_jur=jur %>% gather(variable, value,-SEER_rate)
+
+C3=ggplot(master_jur,aes(x=SEER_rate,y=value),color="black")+geom_point(size=1)+stat_smooth(se=F,method = "lm",formula = y~x)+
+  theme(text = element_text(size=8),axis.text = element_text(size=8),plot.title = element_text(hjust=0,size=8),legend.position=c(.15,.3),legend.justification = c(.9,.9),legend.key.size = unit(.5,'lines'))+
+  theme(legend.background = element_blank(),legend.box.background = element_rect(colour = NA),legend.margin=unit(0.3, "lines"))+theme_classic()+
+  ggtitle("Medical")+
+  ylab("Predictor")+xlab("Melanoma rate")+facet_wrap(~variable,scales="free")
+
+C3
+
+
+```
+
+## Corplot  
+
+```{r}
+
+M <- cor(modDF)
+corrplot(M,type="upper",order="hclust",outline = T,tl.col="black",tl.cex = .9)
+```
+
+
+# Generalized linear models (GLM)
+
+## Environmental GLMs
+### Summary
+How to interpret summary: https://stats.stackexchange.com/questions/86351/interpretation-of-rs-output-for-binomial-regression  
+(Don't worry about this)
+```{r , message=FALSE,warning=F}
+library(mgcv)
+a=glm(SEER_rate~anRange_temperature+cancer_gov_UV_exposure+mean_cloud+elevation+mean_temperature+seasonality_cloud+seasonality_temperature+sun_exposure+UV_daily_dose+UV_irradiance,data=modDF)
+summary(a)
+env_glm_aic=a$aic
+c=summary(a)
+env_glm_r2=1-(c$deviance/c$null.deviance)
+```
+### Predictor effects
+This is the relationship between each predictor and SEER_rate, holding all other variables at their average value
+You can read more about it here: https://cran.r-project.org/web/packages/effects/vignettes/predictor-effects-gallery.pdf  
+(Don't worry about this)  
+
+```{r,  message=FALSE,warning=F}
+library(effects)
+for(i in 1:10){
+plot(predictorEffects(a)[i],cex=.1)
+}
+```
+
+### Variable importance
+You can read more about how this is caluclated here: https://topepo.github.io/caret/variable-importance.html  
+(Don't worry about this)  
+```{r}
+library(caret)
+b=varImp(a) %>% mutate(Var=rownames(.))
+arrange(b,Overall)
+
+```
+
+### observed versus predicted
+
+```{r}
+b=predict(a,modDF)
+x=modDF %>% dplyr::select(SEER_rate) %>% mutate(predicted=b) 
+ggplot(x)+geom_density(aes(SEER_rate,color="Observed"))+geom_density(aes(predicted,color="Predicted"))
+
+ratio_env=sum(x$SEER_rate)/sum(x$predicted)
+RMSE_env=RMSE(x$predicted,x$SEER_rate)
+```
+
+## Medical GLMs
+
+### Summary
+How to interpret summary: https://stats.stackexchange.com/questions/86351/interpretation-of-rs-output-for-binomial-regression  
+(Don't worry about this)
+```{r, message=FALSE,warning=F}
+library(mgcv)
+a=glm(SEER_rate~incm_pc+wpovr50+incm_mh+derm_pk+pcp_pk+docs_pk+wpvr100,data=modDF)
+summary(a)
+med_glm_aic=a$aic
+c=summary(a)
+med_glm_r2=1-(c$deviance/c$null.deviance)
+```
+### Predictor effects
+This is the relationship between each predictor and SEER_rate, holding all other variables at their average value
+You can read more about it here: https://cran.r-project.org/web/packages/effects/vignettes/predictor-effects-gallery.pdf  
+(Don't worry about this)  
+
+```{r,  message=FALSE,warning=F}
+library(effects)
+for(i in 1:7){
+plot(predictorEffects(a)[i],cex=.1)
+}
+```
+
+### Variable importance
+You can read more about how this is caluclated here: https://topepo.github.io/caret/variable-importance.html  
+(Don't worry about this)  
+```{r}
+library(caret)
+b=varImp(a) %>% mutate(Var=rownames(.))
+arrange(b,Overall)
+
+```
+### observed versus predicted
+
+```{r}
+b=predict(a,modDF)
+x=modDF %>% dplyr::select(SEER_rate) %>% mutate(predicted=b) 
+ggplot(x)+geom_density(aes(SEER_rate,color="Observed"))+geom_density(aes(predicted,color="Predicted"))
+
+ratio_med=sum(x$SEER_rate)/sum(x$predicted)
+RMSE_med=RMSE(x$predicted,x$SEER_rate)
+```
+
+## Environment and medical  GLMs
+
+### Summary
+How to interpret summary: https://stats.stackexchange.com/questions/86351/interpretation-of-rs-output-for-binomial-regression  
+(Don't worry about this)
+```{r, message=FALSE,warning=F}
+library(mgcv)
+a=glm(SEER_rate~incm_pc+wpovr50+incm_mh+derm_pk+pcp_pk+docs_pk+wpvr100+anRange_temperature+cancer_gov_UV_exposure+mean_cloud+elevation+mean_temperature+seasonality_cloud+seasonality_temperature+sun_exposure+UV_daily_dose+UV_irradiance,data=modDF)
+summary(a)
+envmed_glm_aic=a$aic
+c=summary(a)
+envmed_glm_r2=1-(c$deviance/c$null.deviance)
+```
+### Predictor effects
+This is the relationship between each predictor and SEER_rate, holding all other variables at their average value
+You can read more about it here: https://cran.r-project.org/web/packages/effects/vignettes/predictor-effects-gallery.pdf  
+(Don't worry about this)  
+
+```{r,  message=FALSE,warning=F}
+library(effects)
+for(i in 1:17){
+plot(predictorEffects(a)[i],cex=.1)
+}
+```
+
+### Variable importance
+You can read more about how this is caluclated here: https://topepo.github.io/caret/variable-importance.html  
+(Don't worry about this)  
+```{r}
+library(caret)
+b=varImp(a) %>% mutate(Var=rownames(.))
+arrange(b,Overall)
+
+```
+### observed versus predicted
+
+```{r}
+b=predict(a,modDF)
+x=modDF %>% dplyr::select(SEER_rate) %>% mutate(predicted=b) 
+ggplot(x)+geom_density(aes(SEER_rate,color="Observed"))+geom_density(aes(predicted,color="Predicted"))
+
+ratio_envmed=sum(x$SEER_rate)/sum(x$predicted)
+RMSE_envmed=RMSE(x$predicted,x$SEER_rate)
+```
+
+## GLM inter-model comparisons
+Some AIC principles:  
+
+1. Lower indicates a more parsimonious model, relative to a model fit
+with a higher AIC.  
+
+2. It is a relative measure of model parsimony, so it only has
+meaning if we compare the AIC for alternate hypotheses (= different
+models of the data).  
+
+Some RMSE principles:  
+RMSE (residual mean square error) represents the model prediction error, that is the average difference the observed outcome values and the predicted outcome values.   
+
+
+```{r}
+AIC=list(env_glm_aic,med_glm_aic,envmed_glm_aic)
+r2=list(env_glm_r2,med_glm_r2,envmed_glm_r2)
+ratio=list(ratio_env,ratio_med,ratio_envmed)
+RMSE=list(RMSE_env,RMSE_med,RMSE_envmed)
+names=list("Environment","Medical","Combined")
+
+dat=data.frame(AIC=as.numeric(AIC),
+               r2=as.numeric(r2),
+               ratio=as.numeric(ratio),
+               RMSE=as.numeric(RMSE),
+               model=as.character(names),
+               stringsAsFactors = F)
+dat
+
+```
+
+# Generalized linear models with quadratic terms 
+I am not sure if this is the best way to do this, but I'm trying to match your interest of only allowing model responses to curve once. Normally I allow models to wiggle a lot more than this. Essentially these are the exact same models as above, but they can follow a quadratic function: http://dl.uncw.edu/digilib/Mathematics/Algebra/mat111hb/PandR/quadratic/quadratic.html
+
+## Environmental quadratic GLMs
+### Summary
+How to interpret summary: https://stats.stackexchange.com/questions/86351/interpretation-of-rs-output-for-binomial-regression  
+(Don't worry about this)
+```{r , message=FALSE,warning=F}
+library(mgcv)
+a=glm(SEER_rate~I(anRange_temperature^2)+I(cancer_gov_UV_exposure^2)+I(mean_cloud^2)+I(elevation^2)+I(mean_temperature^2)+I(seasonality_cloud^2)+I(seasonality_temperature^2)+I(sun_exposure^2)+I(UV_daily_dose^2)+I(UV_irradiance^2),data=modDF)
+summary(a)
+env_glm_aic=a$aic
+c=summary(a)
+env_glm_r2=1-(c$deviance/c$null.deviance)
+```
+### Predictor effects
+This is the relationship between each predictor and SEER_rate, holding all other variables at their average value
+You can read more about it here: https://cran.r-project.org/web/packages/effects/vignettes/predictor-effects-gallery.pdf  
+(Don't worry about this)  
+
+```{r,  message=FALSE,warning=F}
+library(effects)
+for(i in 1:10){
+plot(predictorEffects(a)[i],cex=.1)
+}
+```
+
+### Variable importance
+You can read more about how this is caluclated here: https://topepo.github.io/caret/variable-importance.html  
+(Don't worry about this)  
+```{r}
+library(caret)
+b=varImp(a) %>% mutate(Var=rownames(.))
+arrange(b,Overall)
+
+```
+
+### observed versus predicted
+
+```{r}
+b=predict(a,modDF)
+x=modDF %>% dplyr::select(SEER_rate) %>% mutate(predicted=b) 
+ggplot(x)+geom_density(aes(SEER_rate,color="Observed"))+geom_density(aes(predicted,color="Predicted"))
+
+ratio_env=sum(x$SEER_rate)/sum(x$predicted)
+RMSE_env=RMSE(x$predicted,x$SEER_rate)
+```
+
+## Medical quadratic GLMs
+
+### Summary
+How to interpret summary: https://stats.stackexchange.com/questions/86351/interpretation-of-rs-output-for-binomial-regression  
+(Don't worry about this)
+```{r, message=FALSE,warning=F}
+library(mgcv)
+a=glm(SEER_rate~I(incm_pc^2)+I(wpovr50^2)+I(incm_mh^2)+I(derm_pk^2)+I(pcp_pk^2)+I(docs_pk^2)+I(wpvr100^2),data=modDF)
+summary(a)
+med_glm_aic=a$aic
+c=summary(a)
+med_glm_r2=1-(c$deviance/c$null.deviance)
+```
+### Predictor effects
+This is the relationship between each predictor and SEER_rate, holding all other variables at their average value
+You can read more about it here: https://cran.r-project.org/web/packages/effects/vignettes/predictor-effects-gallery.pdf  
+(Don't worry about this)  
+
+```{r,  message=FALSE,warning=F}
+library(effects)
+for(i in 1:7){
+plot(predictorEffects(a)[i],cex=.1)
+}
+```
+
+### Variable importance
+You can read more about how this is caluclated here: https://topepo.github.io/caret/variable-importance.html  
+(Don't worry about this)  
+```{r}
+library(caret)
+b=varImp(a) %>% mutate(Var=rownames(.))
+arrange(b,Overall)
+
+```
+### observed versus predicted
+
+```{r}
+b=predict(a,modDF)
+x=modDF %>% dplyr::select(SEER_rate) %>% mutate(predicted=b) 
+ggplot(x)+geom_density(aes(SEER_rate,color="Observed"))+geom_density(aes(predicted,color="Predicted"))
+
+ratio_med=sum(x$SEER_rate)/sum(x$predicted)
+RMSE_med=RMSE(x$predicted,x$SEER_rate)
+```
+
+## Environment and medical quadratic GLMs
+
+### Summary
+How to interpret summary: https://stats.stackexchange.com/questions/86351/interpretation-of-rs-output-for-binomial-regression  
+(Don't worry about this)
+```{r, message=FALSE,warning=F}
+library(mgcv)
+a=glm(SEER_rate~I(incm_pc^2)+I(wpovr50^2)+I(incm_mh^2)+I(derm_pk^2)+I(pcp_pk^2)+I(docs_pk^2)+I(wpvr100^2)+I(anRange_temperature^2)+I(cancer_gov_UV_exposure^2)+I(mean_cloud^2)+I(elevation^2)+I(mean_temperature^2)+I(seasonality_cloud^2)+I(seasonality_temperature^2)+I(sun_exposure^2)+I(UV_daily_dose^2)+I(UV_irradiance^2),data=modDF)
+summary(a)
+envmed_glm_aic=a$aic
+c=summary(a)
+envmed_glm_r2=1-(c$deviance/c$null.deviance)
+```
+### Predictor effects
+This is the relationship between each predictor and SEER_rate, holding all other variables at their average value
+You can read more about it here: https://cran.r-project.org/web/packages/effects/vignettes/predictor-effects-gallery.pdf  
+(Don't worry about this)  
+
+```{r,  message=FALSE,warning=F}
+library(effects)
+for(i in 1:17){
+plot(predictorEffects(a)[i],cex=.1)
+}
+```
+
+### Variable importance
+You can read more about how this is caluclated here: https://topepo.github.io/caret/variable-importance.html  
+(Don't worry about this)  
+```{r}
+library(caret)
+b=varImp(a) %>% mutate(Var=rownames(.))
+arrange(b,Overall)
+
+```
+### observed versus predicted
+
+```{r}
+b=predict(a,modDF)
+x=modDF %>% dplyr::select(SEER_rate) %>% mutate(predicted=b) 
+ggplot(x)+geom_density(aes(SEER_rate,color="Observed"))+geom_density(aes(predicted,color="Predicted"))
+
+ratio_envmed=sum(x$SEER_rate)/sum(x$predicted)
+RMSE_envmed=RMSE(x$predicted,x$SEER_rate)
+```
+
+## quadratic GLM inter-model comparisons
+Some AIC principles:  
+
+1. Lower indicates a more parsimonious model, relative to a model fit
+with a higher AIC.  
+
+2. It is a relative measure of model parsimony, so it only has
+meaning if we compare the AIC for alternate hypotheses (= different
+models of the data).  
+
+Some RMSE principles:  
+RMSE (residual mean square error) represents the model prediction error, that is the average difference the observed outcome values and the predicted outcome values.   
+
+
+```{r}
+AIC=list(env_glm_aic,med_glm_aic,envmed_glm_aic)
+r2=list(env_glm_r2,med_glm_r2,envmed_glm_r2)
+ratio=list(ratio_env,ratio_med,ratio_envmed)
+RMSE=list(RMSE_env,RMSE_med,RMSE_envmed)
+names=list("Environment","Medical","Combined")
+
+dat=data.frame(AIC=as.numeric(AIC),
+               r2=as.numeric(r2),
+               ratio=as.numeric(ratio),
+               RMSE=as.numeric(RMSE),
+               model=as.character(names),
+               stringsAsFactors = F)
+dat
+
+```
+
+# Generalized additive models (GAMs)
+These are going to use "shrinkage" to assess the optimal wiggliness of model fits. Wiggle are fit using thin plate regression splines. These models will also effectively remove predictors from the model if they are not contributing significantly.
+
+## Environmental GAMs
+### Summary
+How to interpret summary: https://stats.stackexchange.com/questions/86351/interpretation-of-rs-output-for-binomial-regression  
+(Don't worry about this)
+```{r , message=FALSE,warning=F}
+library(mgcv)
+a=gam(SEER_rate~s(anRange_temperature,bs="ts")+s(cancer_gov_UV_exposure,bs="ts")+s(mean_cloud,bs="ts")+s(elevation,bs="ts")+s(mean_temperature,bs="ts")+s(seasonality_cloud,bs="ts")+s(seasonality_temperature,bs="ts")+s(sun_exposure,bs="ts")+s(UV_daily_dose,bs="ts")+s(UV_irradiance,bs="ts"),data=modDF)
+summary(a)
+env_glm_aic=AIC(a)
+env_glm_r2=1-(a$deviance/a$null.deviance)
+```
+
+### Predictor effects
+This is the relationship between each predictor and SEER_rate, holding all other variables at their average value
+You can read more about it here: https://cran.r-project.org/web/packages/effects/vignettes/predictor-effects-gallery.pdf  
+(Don't worry about this)  
+
+```{r,  message=FALSE,warning=F}
+plot(a,pages=1)
+```
+
+### Variable importance
+You can read more about how this is caluclated here: https://topepo.github.io/caret/variable-importance.html  
+(Don't worry about this)  
+```{r}
+library(caret)
+b=varImp(a) %>% mutate(Var=rownames(.))
+arrange(b,Overall)
+
+```
+
+### observed versus predicted
+
+```{r}
+b=predict(a,modDF)
+x=modDF %>% dplyr::select(SEER_rate) %>% mutate(predicted=b) 
+ggplot(x)+geom_density(aes(SEER_rate,color="Observed"))+geom_density(aes(predicted,color="Predicted"))
+
+ratio_env=sum(x$SEER_rate)/sum(x$predicted)
+RMSE_env=RMSE(x$predicted,x$SEER_rate)
+```
+
+## Medical GAMs
+### Summary
+How to interpret summary: https://stats.stackexchange.com/questions/86351/interpretation-of-rs-output-for-binomial-regression  
+(Don't worry about this)
+```{r , message=FALSE,warning=F}
+library(mgcv)
+a=gam(SEER_rate~s(incm_pc,bs="ts")+s(wpovr50,bs="ts")+s(incm_mh,bs="ts")+s(derm_pk,bs="ts")+s(pcp_pk,bs="ts")+s(docs_pk,bs="ts")+s(wpvr100,bs="ts"),data=modDF)
+summary(a)
+med_glm_aic=AIC(a)
+med_glm_r2=1-(a$deviance/a$null.deviance)
+```
+
+### Predictor effects
+This is the relationship between each predictor and SEER_rate, holding all other variables at their average value
+You can read more about it here: https://cran.r-project.org/web/packages/effects/vignettes/predictor-effects-gallery.pdf  
+(Don't worry about this)  
+
+```{r,  message=FALSE,warning=F}
+plot(a,pages=1)
+```
+
+### Variable importance
+You can read more about how this is caluclated here: https://topepo.github.io/caret/variable-importance.html  
+(Don't worry about this)  
+```{r}
+library(caret)
+b=varImp(a) %>% mutate(Var=rownames(.))
+arrange(b,Overall)
+
+```
+
+### observed versus predicted
+
+```{r}
+b=predict(a,modDF)
+x=modDF %>% dplyr::select(SEER_rate) %>% mutate(predicted=b) 
+ggplot(x)+geom_density(aes(SEER_rate,color="Observed"))+geom_density(aes(predicted,color="Predicted"))
+
+ratio_med=sum(x$SEER_rate)/sum(x$predicted)
+RMSE_med=RMSE(x$predicted,x$SEER_rate)
+```
+
+## Environment and medical GAMs
+### Summary
+How to interpret summary: https://stats.stackexchange.com/questions/86351/interpretation-of-rs-output-for-binomial-regression  
+(Don't worry about this)
+```{r , message=FALSE,warning=F}
+library(mgcv)
+a=gam(SEER_rate~s(anRange_temperature,bs="ts")+s(cancer_gov_UV_exposure,bs="ts")+s(mean_cloud,bs="ts")+s(elevation,bs="ts")+s(mean_temperature,bs="ts")+s(seasonality_cloud,bs="ts")+s(seasonality_temperature,bs="ts")+s(sun_exposure,bs="ts")+s(UV_daily_dose,bs="ts")+s(UV_irradiance,bs="ts")+s(incm_pc,bs="ts")+s(wpovr50,bs="ts")+s(incm_mh,bs="ts")+s(derm_pk,bs="ts")+s(pcp_pk,bs="ts")+s(docs_pk,bs="ts")+s(wpvr100,bs="ts"),data=modDF)
+summary(a)
+envmed_glm_aic=AIC(a)
+envmed_glm_r2=1-(a$deviance/a$null.deviance)
+```
+
+### Predictor effects
+This is the relationship between each predictor and SEER_rate, holding all other variables at their average value
+You can read more about it here: https://cran.r-project.org/web/packages/effects/vignettes/predictor-effects-gallery.pdf  
+(Don't worry about this)  
+
+```{r,  message=FALSE,warning=F}
+plot(a,pages=1)
+```
+
+### Variable importance
+You can read more about how this is caluclated here: https://topepo.github.io/caret/variable-importance.html  
+(Don't worry about this)  
+```{r}
+library(caret)
+b=varImp(a) %>% mutate(Var=rownames(.))
+arrange(b,Overall)
+
+```
+
+### observed versus predicted
+
+```{r}
+b=predict(a,modDF)
+x=modDF %>% dplyr::select(SEER_rate) %>% mutate(predicted=b) 
+ggplot(x)+geom_density(aes(SEER_rate,color="Observed"))+geom_density(aes(predicted,color="Predicted"))
+
+ratio_envmed=sum(x$SEER_rate)/sum(x$predicted)
+RMSE_envmed=RMSE(x$predicted,x$SEER_rate)
+
+```
+
+## GAM inter-model comparisons
+Some AIC principles:  
+
+1. Lower indicates a more parsimonious model, relative to a model fit
+with a higher AIC.  
+
+2. It is a relative measure of model parsimony, so it only has
+meaning if we compare the AIC for alternate hypotheses (= different
+models of the data).  
+
+Some RMSE principles:  
+RMSE (residual mean square error) represents the model prediction error, that is the average difference the observed outcome values and the predicted outcome values.   
+
+
+```{r}
+AIC=list(env_glm_aic,med_glm_aic,envmed_glm_aic)
+r2=list(env_glm_r2,med_glm_r2,envmed_glm_r2)
+ratio=list(ratio_env,ratio_med,ratio_envmed)
+RMSE=list(RMSE_env,RMSE_med,RMSE_envmed)
+names=list("Environment","Medical","Combined")
+
+dat=data.frame(AIC=as.numeric(AIC),
+               r2=as.numeric(r2),
+               ratio=as.numeric(ratio),
+               RMSE=as.numeric(RMSE),
+               model=as.character(names),
+               stringsAsFactors = F)
+dat
+
+```

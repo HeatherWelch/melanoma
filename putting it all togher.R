@@ -4,8 +4,8 @@ spatial_dir="/Users/heatherwelch/Dropbox/melenoma/spatial_files"
 outdir="/Users/heatherwelch/Dropbox/melenoma/plots_01_02_20"
 
 # medical
-b=st_read(glue("{spatial_dir}/AHRF_new.shp")) %>% as.data.frame
-ahrf=b %>% dplyr::select(c(NAME,COUNTY_, incm_pc,incm_mh,derm_pk,pcp_pk,docs_pk,wpovr50,wpvr100)) %>% rename(COUNTY_FIPS=COUNTY_)
+b=st_read(glue("{spatial_dir}/AHRF_new_01_30_20.shp")) %>% as.data.frame
+ahrf=b %>% dplyr::select(c(NAME,COUNTY_, incm_pc,incm_mh,derm_pk,pcp_pk,docs_pk,wpovr50,wpvr100,HI_65)) %>% rename(COUNTY_FIPS=COUNTY_)
 
 seer=read.csv("/Users/heatherwelch/Dropbox/melenoma/spatial_files/SEER_rate.csv")
 

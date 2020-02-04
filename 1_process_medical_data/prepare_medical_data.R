@@ -72,16 +72,19 @@ incomeNHW5=a %>% dplyr::select(f1440013,f1440011)%>% rowMeans() #Wh non/Hisp HHl
 income=as.data.frame(incomeNHW0) 
 income=income %>% mutate(incomeNHW1=incomeNHW1) %>% mutate(incomeNHW2=incomeNHW2) %>% mutate(incomeNHW3=incomeNHW3) %>% mutate(incomeNHW4=incomeNHW4) %>% mutate(incomeNHW5=incomeNHW5) %>% mutate(total=rowSums(.))
 income=income %>% mutate(over50=incomeNHW4+incomeNHW5) %>% mutate(wpover50=over50/total*100) %>% mutate(wpover100=incomeNHW5/total*100)
+HI_65=a %>% dplyr::select(f1547416,f1547415,f1547414,f1547413,f1475112)%>% rowMeans() 
+HI_65=100-HI_65
 
 master=a %>% dplyr::select(f00002,f00012,f00011,f00010) %>% mutate(dermo=dermo) %>% mutate(pcp=pcp) %>% mutate(docs=docs) %>% mutate(pop=pop) %>% mutate(income_pc=income_pc) %>% mutate(income_mh=income_mh) %>% 
-  mutate(wpover50=income$wpover50) %>% mutate(wpover100=income$wpover100)
+  mutate(wpover50=income$wpover50) %>% mutate(wpover100=income$wpover100) %>% mutate(HI_65=HI_65)
 master=master %>% mutate(dermo_pk=dermo*100000/pop)
 master=master %>% mutate(pcp_pk=pcp*100000/pop)
 master=master %>% mutate(docs_pk=docs*100000/pop)
 master=master %>% mutate(COUNTY_FIPS=as.integer(f00002))
 b=left_join(sa,master)
-st_write(b, glue("{spatial_dir}/AHRF.shp"))
-st_write(b, glue("{spatial_dir}/AHRF_new.shp"))
+# st_write(b, glue("{spatial_dir}/AHRF.shp"))
+# st_write(b, glue("{spatial_dir}/AHRF_new.shp"))
+st_write(b, glue("{spatial_dir}/AHRF_new_01_30_20.shp"))
 
 # health resource income per capita ####
 source('/Users/heatherwelch/Dropbox/melenoma/melanoma_GitHub/utilities/load_libraries.R')
@@ -226,3 +229,30 @@ dev.off()
             
             
             
+
+# % with health insurance (<age65) ####
+source('/Users/heatherwelch/Dropbox/melenoma/melanoma_GitHub/utilities/load_libraries.R')
+spatial_dir="/Users/heatherwelch/Dropbox/melenoma/spatial_files"
+outdir="/Users/heatherwelch/Dropbox/melenoma/plots_01_02_20"
+b=st_read(glue("{spatial_dir}/AHRF_new_01_30_20.shp"))
+variable="HI_65"
+x.var <- rlang::sym(variable)
+
+map=ggplot()+geom_sf(data=b,aes(fill = ntile(!!x.var,100)),color = "black", size = 0.4)+ theme(panel.background = element_blank())+ theme(axis.line = element_line(colour = "black"))+
+  ggtitle(variable)+
+  scale_fill_gradientn(colours = pals::parula(100),na.value="black")+ coord_sf(xlim = c(-125.0011, -66.9326),ylim = c(24.9493,49.5904))
+
+
+png(glue("{outdir}/{variable}.png"),width=36,height=22,units='cm',res=400)
+par(ps=10)
+par(mar=c(4,4,1,1))
+par(cex=1)
+print({map})
+dev.off()
+
+
+
+
+
+
+
