@@ -169,3 +169,8 @@ other:
 Source: https://data.hrsa.gov/data/download  
 type: average 2011-2017  
 other: 
+
+8. % with health insurance (<age65) (HI_65)   
+Source: https://data.hrsa.gov/data/download  
+type: average 2012-2016  
+other: 
