@@ -67,3 +67,22 @@ system.time(print(
     mappfunction(predictions[i],dat=new)
   }
 ))
+
+# useful fixed effects links
+#https://www.jmp.com/support/help/14/mixed-models-and-random-effect-models.shtml
+#https://rstudio-pubs-static.s3.amazonaws.com/372492_3e05f38dd3f248e89cdedd317d603b9a.html
+#https://rpubs.com/rslbliss/fixed_effects
+#https://dss.princeton.edu/training/Panel101.pdf
+
+dat=left_join(master,studyarea)
+a4=mgcv::gam(SEER_rate~+incm_pc+wpovr50+incm_mh+derm_pk+pcp_pk+docs_pk+wpvr100+STATEFP-1,data=dat,family=gaussian) # fixe
+a4=mgcv::gam(SEER_rate~+incm_pc+wpovr50+incm_mh+derm_pk+pcp_pk+docs_pk+wpvr100+(1|STATEFP),data=dat,family=gaussian)
+
+M <- a4$fitted
+library(car)
+scatterplot(yhat~dat$UV_daily_dose|dat$STATEFP, boxplots=FALSE, xlab="UV_daily_dose", ylab="Incidence",smooth=FALSE)
+abline(lm(dat$SEER_rate~dat$UV_daily_dose),lwd=3, col="red")
+
+dat=left_join(master,studyarea) %>% filter(STATEFP=="06")
+a4=mgcv::gam(SEER_rate~+incm_pc+wpovr50+incm_mh+derm_pk+pcp_pk+docs_pk+wpvr100,data=dat,family=gaussian)
+a4=mgcv::gam(SEER_rate~+anRange_temperature+cancer_gov_UV_exposure+mean_cloud+elevation+mean_temperature+seasonality_cloud+seasonality_temperature+sun_exposure+UV_daily_dose+UV_irradiance,data=dat,family=gaussian)
