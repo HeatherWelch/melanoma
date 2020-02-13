@@ -5,7 +5,7 @@ outdir="/Users/heatherwelch/Dropbox/melenoma/plots_01_02_20"
 
 # medical
 b=st_read(glue("{spatial_dir}/AHRF_new_01_30_20.shp")) %>% as.data.frame
-ahrf=b %>% dplyr::select(c(NAME,COUNTY_, incm_pc,incm_mh,derm_pk,pcp_pk,docs_pk,wpovr50,wpvr100,HI_65)) %>% rename(COUNTY_FIPS=COUNTY_)
+ahrf=b %>% dplyr::select(c(STATEFP,NAME,COUNTY_, incm_pc,incm_mh,derm_pk,pcp_pk,docs_pk,wpovr50,wpvr100,HI_65)) %>% rename(COUNTY_FIPS=COUNTY_)
 
 seer=read.csv("/Users/heatherwelch/Dropbox/melenoma/spatial_files/SEER_rate.csv")
 
@@ -33,6 +33,7 @@ master=left_join(master,ahrf)
 
 g=master[complete.cases(master),] 
 write.csv(g,"/Users/heatherwelch/Dropbox/melenoma/melanoma_GitHub/model_data/data_01_30_20_withpop_FIPS.csv")
+write.csv(g,"/Users/heatherwelch/Dropbox/melenoma/melanoma_GitHub/model_data/data_01_30_20_withpop_FIPS_STATEFP.csv")
 g=master[complete.cases(master),] %>% dplyr::select(-c(Pop,COUNTY_FIPS,NAME))
 
 head(g)
