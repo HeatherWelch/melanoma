@@ -2,6 +2,7 @@ source('/Users/heatherwelch/Dropbox/melenoma/melanoma_GitHub/utilities/load_libr
 # library(gam)
 library(mgcv)
 library(lme4)
+library(MuMIn)
 modDF=read.csv("/Users/heatherwelch/Dropbox/melenoma/melanoma_GitHub/model_data/data_01_30_20_withpop_FIPS_STATEFP.csv")
 
 empty=list()
@@ -99,18 +100,18 @@ dev.off()
 filter(master,modtype=="linear") %>% arrange(rsq_fixed)
 filter(master,modtype=="mixed") %>% arrange(rsq_fixed)
 
-## full models
-lmm_medical_best=r.squaredGLMM(lmer(SEER_rate~incm_mh+wpovr50+(1|STATEFP),data=modDF))[1]
-lm_medical_best=r.squaredGLMM(lm(SEER_rate~incm_mh+wpovr50,data=modDF))[1]
+## full models #####
+lmm_medical_best=r.squaredGLMM(lmer(SEER_rate~rescale(incm_mh,to=c(0,100))+rescale(wpovr50,to=c(0,100))+(1|STATEFP),data=modDF))[1]
+lm_medical_best=r.squaredGLMM(lm(SEER_rate~rescale(incm_mh,to=c(0,100))+rescale(wpovr50,to=c(0,100)),data=modDF))[1]
 
-lmm_medical_all=r.squaredGLMM(lmer(SEER_rate~incm_mh+wpovr50+wpvr100+docs_pk+pcp_pk+derm_pk+(1|STATEFP),data=modDF))[1]
-lm_medical_all=r.squaredGLMM(lm(SEER_rate~incm_mh+wpovr50+wpvr100+docs_pk+pcp_pk+derm_pk,data=modDF))[1]
+lmm_medical_all=r.squaredGLMM(lmer(SEER_rate~rescale(incm_mh,to=c(0,100))+rescale(wpovr50,to=c(0,100))+rescale(wpvr100,to=c(0,100))+rescale(docs_pk,to=c(0,100))+rescale(pcp_pk,to=c(0,100))+rescale(derm_pk,to=c(0,100))+(1|STATEFP),data=modDF))[1]
+lm_medical_all=r.squaredGLMM(lm(SEER_rate~rescale(incm_mh,to=c(0,100))+rescale(wpovr50,to=c(0,100))+rescale(wpvr100,to=c(0,100))+rescale(docs_pk,to=c(0,100))+rescale(pcp_pk,to=c(0,100))+rescale(derm_pk,to=c(0,100)),data=modDF))[1]
 
-lmm_envt_best=r.squaredGLMM(lmer(SEER_rate~UV_irradiance+seasonality_temperature+(1|STATEFP),data=modDF))[1]
-lm_envt_best=r.squaredGLMM(lm(SEER_rate~UV_irradiance+seasonality_temperature,data=modDF))[1]
+lmm_envt_best=r.squaredGLMM(lmer(SEER_rate~rescale(UV_irradiance,to=c(0,100))+rescale(seasonality_temperature,to=c(0,100))+(1|STATEFP),data=modDF))[1]
+lm_envt_best=r.squaredGLMM(lm(SEER_rate~rescale(UV_irradiance,to=c(0,100))+rescale(seasonality_temperature,to=c(0,100)),data=modDF))[1]
 
-lmm_envt_all=r.squaredGLMM(lmer(SEER_rate~UV_irradiance+seasonality_temperature+sun_exposure+seasonality_cloud+elevation+mean_cloud+(1|STATEFP),data=modDF))[1]
-lm_envt_all=r.squaredGLMM(lm(SEER_rate~UV_irradiance+seasonality_temperature+sun_exposure+seasonality_cloud+elevation+mean_cloud,data=modDF))[1]
+lmm_envt_all=r.squaredGLMM(lmer(SEER_rate~rescale(UV_irradiance,to=c(0,100))+rescale(seasonality_temperature,to=c(0,100))+rescale(sun_exposure,to=c(0,100))+rescale(seasonality_cloud,to=c(0,100))+rescale(elevation,to=c(0,100))+rescale(mean_cloud,to=c(0,100))+(1|STATEFP),data=modDF))[1]
+lm_envt_all=r.squaredGLMM(lm(SEER_rate~rescale(UV_irradiance,to=c(0,100))+rescale(seasonality_temperature,to=c(0,100))+rescale(sun_exposure,to=c(0,100))+rescale(seasonality_cloud,to=c(0,100))+rescale(elevation,to=c(0,100))+rescale(mean_cloud,to=c(0,100)),data=modDF))[1]
 
 models=c("mixed","linear","mixed","linear","mixed","linear","mixed","linear")
 data=c(rep("Medial",4),rep("Environment",4))
@@ -134,3 +135,12 @@ par(cex=1)
 print({c})
 dev.off()
 
+## full models again ####
+vars=colnames(modDF)[c(5:14,17:23)]
+vars_envt=vars[1:10]
+vars_medial=vars[11:17]
+
+test=modDF[c(2,5:14,17:23)]
+g=cor(test)
+f=corrplot(g,order="hclust")
+f
