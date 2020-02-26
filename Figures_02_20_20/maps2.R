@@ -6,8 +6,8 @@ master=read.csv("/Users/heatherwelch/Dropbox/melenoma/Figures_04_20_20/master_da
 studyarea=st_read(glue("/Users/heatherwelch/Dropbox/melenoma/us_shapefiles/tl_2017_us_county/tl_2017_us_county.shp"))
 studyarea=studyarea %>% mutate(COUNTY_FIPS=as.character(glue("{STATEFP}{COUNTYFP}")))
 
-outdir="/Users/heatherwelch/Dropbox/melenoma/Figures_04_20_20/maps"
-dat=full_join(studyarea,master,by="COUNTY_FIPS") 
+outdir="/Users/heatherwelch/Dropbox/melenoma/Figures_04_20_20/maps_80"#;dir.create(outdir)
+dat=full_join(studyarea,master,by="COUNTY_FIPS")%>% mutate(Pop=as.numeric(gsub(",","",as.character(Pop)))) %>% filter(Pop>500000)
 
 library(scales)
 
