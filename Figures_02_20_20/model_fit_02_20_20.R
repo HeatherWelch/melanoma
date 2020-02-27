@@ -465,7 +465,7 @@ for(i in 1:length(unique(master$variable))){
   dev.off()
 }
 
-new=master
+new=master %>% filter(modtype!="All")
 new$mapVar=new$variable
 new$varName=NA
 
@@ -513,7 +513,7 @@ order <- label_data2$varName
 order <- c(order)
 order <- factor(order, levels=order)
 
-pal <- c("#e76a6a","grey","#6dac4f")
+pal <- c("darkgreen","red","#darkgreen")
 
 map=ggplot(dat=new,aes(x=varName,rsq_fixed))+geom_bar(aes(group=modtype,fill=modtype),stat="identity")+
   scale_x_discrete(limits=order)+
@@ -528,20 +528,20 @@ map=ggplot(dat=new,aes(x=varName,rsq_fixed))+geom_bar(aes(group=modtype,fill=mod
   theme(plot.margin = margin(1, 1, 1, 1, "cm"))+
   theme(legend.title = element_text(size=2),legend.position=c(.3,.8),legend.key.width = unit(.3, "cm"),legend.key.height = unit(.2, "cm"))+theme(legend.text=element_text(size=4),legend.title = element_text(size=5))
 
-map=map+  annotate(geom="text",
-                   x="Households >$50,000",y=.45,
-                   label="0.45-",
-                   hjust=3.0,
-                   size=1.5,
-                   color="black",
-                   alpha=.7) +
-  annotate(geom="text",
-              x="Households >$50,000",y=.35,
-              label="0.35-",
-              hjust=2.6,
-              size=1.5,
-              color="black",
-              alpha=.7)+
+map=map+  #annotate(geom="text",
+  #                  x="Households >$50,000",y=.45,
+  #                  label="0.45-",
+  #                  hjust=3.0,
+  #                  size=1.5,
+  #                  color="black",
+  #                  alpha=.7) +
+  # annotate(geom="text",
+  #             x="Households >$50,000",y=.35,
+  #             label="0.35-",
+  #             hjust=2.6,
+  #             size=1.5,
+  #             color="black",
+  #             alpha=.7)+
   annotate(geom="text",
               x="Households >$50,000",y=.25,
               label="0.25-",
