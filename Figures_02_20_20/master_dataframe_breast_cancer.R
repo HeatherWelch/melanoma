@@ -31,7 +31,10 @@ master=left_join(master,UV_daily_dose)
 master=left_join(master,UV_irradiance)
 master=left_join(master,ahrf)
 
-mast=master %>% mutate(anRange_temperature=anRange_temperature/10,mean_temperature=mean_temperature/10,seasonality_temperature=seasonality_temperature/10)
+BD=read.csv("/Users/heatherwelch/Dropbox/melenoma/medical/Breast_cancer_727_counties.csv")
+new=left_join(master,BD,by=c("COUNTY_FIPS"="CountyFips"))
 
-write.csv(mast, "/Users/heatherwelch/Dropbox/melenoma/Figures_04_20_20/master_dataframe.csv")
+mast=new %>% mutate(anRange_temperature=anRange_temperature/10,mean_temperature=mean_temperature/10,seasonality_temperature=seasonality_temperature/10)
+
+write.csv(mast, "/Users/heatherwelch/Dropbox/melenoma/Figures_04_20_20/master_dataframe_breast_cancer.csv")
 

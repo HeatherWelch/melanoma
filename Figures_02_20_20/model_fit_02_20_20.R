@@ -560,6 +560,252 @@ print({map})
 dev.off()
 
 
+# seer rate all +ivasive + in situ data breast cancer####
+test=read.csv("/Users/heatherwelch/Dropbox/melenoma/Figures_04_20_20/master_dataframe_breast_cancer.csv") %>% dplyr::select(-c(X,Pop,STATEFP,NAME)) %>% .[complete.cases(.),]
+# seer=read.csv("/Users/heatherwelch/Dropbox/melenoma/medical/Melanoma_insitu_vs_invasive.csv") %>% mutate(COUNTY_FIPS=as.integer(FIPS))
+# test=left_join(modDF,seer)
+empty=list()
+
+for(i in 3:20){
+  var=names(test)[i]
+  print(var)
+  # build models
+  fm2=lm(as.formula(glue("NHWinsitu ~ {var}")),data=test)
+  fm2a=lm(as.formula(glue("NHWinvasive ~ {var}")),data=test)
+  fm2b=lm(as.formula(glue("SEER_rate ~ {var}")),data=test)
+  # fm4 <- lmer(as.formula(glue("SEER_rate ~ {var}+(1|STATEFP)")), data = modDF)
+  
+  # get coefficients
+  lm_summary=summary(fm2)
+  lm_summarya=summary(fm2a)
+  lm_summaryb=summary(fm2b)
+  
+  lm_int=lm_summary$coefficients[1]
+  lm_slope=lm_summary$coefficients[2]
+  
+  lm_inta=lm_summarya$coefficients[1]
+  lm_slopea=lm_summarya$coefficients[2]
+  
+  lm_intb=lm_summaryb$coefficients[1]
+  lm_slopeb=lm_summaryb$coefficients[2]
+  
+  # get rsqured
+  lm_rsq_fixed=r.squaredGLMM(fm2)[1]
+  lm_rsq_random=r.squaredGLMM(fm2)[2]
+  
+  lm_rsq_fixeda=r.squaredGLMM(fm2a)[1]
+  lm_rsq_randoma=r.squaredGLMM(fm2a)[2]
+  
+  lm_rsq_fixedb=r.squaredGLMM(fm2b)[1]
+  lm_rsq_randomb=r.squaredGLMM(fm2b)[2]
+  
+  dat_lm=data.frame(variable=as.character(var),
+                    slope=as.numeric(lm_slope),
+                    intercept=as.numeric(lm_int),
+                    rsq_fixed=as.numeric(lm_rsq_fixed),
+                    modtype=as.character("In.situ"),
+                    rsq_fixed_plus_random=as.numeric(lm_rsq_random),
+                    stringsAsFactors = F)
+  
+  dat_lma=data.frame(variable=as.character(var),
+                     slope=as.numeric(lm_slopea),
+                     intercept=as.numeric(lm_inta),
+                     rsq_fixed=as.numeric(lm_rsq_fixeda),
+                     modtype=as.character("Invasive"),
+                     rsq_fixed_plus_random=as.numeric(lm_rsq_randoma),
+                     stringsAsFactors = F)
+  
+  dat_lmb=data.frame(variable=as.character(var),
+                     slope=as.numeric(lm_slopeb),
+                     intercept=as.numeric(lm_intb),
+                     rsq_fixed=as.numeric(lm_rsq_fixedb),
+                     modtype=as.character("All"),
+                     rsq_fixed_plus_random=as.numeric(lm_rsq_randomb),
+                     stringsAsFactors = F)
+  
+  dat=rbind(dat_lm,dat_lma,dat_lmb)
+  
+  empty[[length(empty)+1]]<-dat
+  
+}
+
+master=do.call(rbind,empty) %>% filter(variable!="STATEFP" &  variable!="NAME")
+outdir="/Users/heatherwelch/Dropbox/melenoma/Figures_04_20_20/scatterplot/insitu_invasive_all_breast_cancer";dir.create(outdir)
+
+for(i in 1:length(unique(master$variable))){
+  
+  mapVar=unique(master$variable)[i]
+  
+  if(mapVar=="SEER_rate"){
+    varName="NHW melanoma incidence"
+  } else if (mapVar=="anRange_temperature"){
+    varName="Annual range temperature (°C)"
+  } else if (mapVar=="cancer_gov_UV_exposure"){
+    varName="UV exposure (mw/m2)"
+  } else if (mapVar=="mean_cloud"){
+    varName="Mean cloud cover (% cloudy days per year)"
+  } else if (mapVar=="elevation"){
+    varName="Elevation (m)"
+  } else if (mapVar=="mean_temperature"){
+    varName="Mean temperature (°C)"
+  } else if (mapVar=="seasonality_cloud"){
+    varName="Seasonality of cloud cover"
+  } else if (mapVar=="seasonality_temperature"){
+    varName="Seasonality of temperature"
+  } else if (mapVar=="sun_exposure"){
+    varName="Sun exposure (kj/m2)"
+  } else if (mapVar=="UV_daily_dose"){
+    varName="UV daily dose (j/m2)"
+  } else if (mapVar=="UV_irradiance"){
+    varName="UV irradiance (mw/m2)"
+  } else if (mapVar=="incm_pc"){
+    varName="Income per capita (USD)"
+  } else if (mapVar=="incm_mh"){
+    varName="Median household income (USD)"
+  } else if (mapVar=="derm_pk"){
+    varName="Dermatologists"
+  } else if (mapVar=="pcp_pk"){
+    varName="Primary care"
+  } else if (mapVar=="docs_pk"){
+    varName="Doctors"
+  } else if (mapVar=="wpovr50"){
+    varName="Households >$50,000 (%)"
+  } else if (mapVar=="wpvr100"){
+    varName="Households >$100,000 (%)"
+  } else if (mapVar=="HI_65"){
+    varName="Health insurance < age 65 (%)"
+  }
+  
+  dat=master %>% filter(variable==mapVar)
+  # plott=ggplot(test,aes(x=.data[[mapVar]],y=SEER_rate))+geom_point(size=1)+geom_abline(slope=dat[3,2],intercept = dat[3,3],color="red",size=1)+
+  #   xlab(varName)+ylab("NHW all melanoma incidence")+theme_classic()+ylim(c(0,150))+
+  #   annotate("text", Inf, Inf, label = glue("R squared={round(dat[3,4],3)}"), hjust =1.5, vjust = 2.5)
+  
+  plotta=ggplot(test,aes(x=.data[[mapVar]],y=NHWinsitu))+geom_point(size=1)+geom_abline(slope=dat[1,2],intercept = dat[1,3],color="red",size=1)+
+    xlab(varName)+ylab("NHW in situ melanoma incidence")+theme_classic()+ylim(c(0,112))+
+    annotate("text", Inf, Inf, label = glue("R squared={round(dat[1,4],3)}"), hjust =1.5, vjust = 2.5)
+  
+  plottb=ggplot(test,aes(x=.data[[mapVar]],y=NHWinvasive))+geom_point(size=1)+geom_abline(slope=dat[2,2],intercept = dat[2,3],color="red",size=1)+
+    xlab(varName)+ylab("NHW invasive melanoma incidence")+theme_classic()+ylim(c(0,238))+
+    annotate("text", Inf, Inf, label = glue("R squared={round(dat[2,4],3)}"), hjust =1.5, vjust = 2.5)
+  
+  if(mapVar=="docs_pk"){
+    plott=plott+xlim(c(0,1300))
+  }
+  if(mapVar=="derm_pk"){
+    plott=plott+xlim(c(0,30))
+  }
+  if(mapVar=="pcp_pk"){
+    plott=plott+xlim(c(0,200))
+  }
+  
+  plott
+  plotta
+  plottb
+  
+  png(glue("{outdir}/{mapVar}.png"),width=20,height=10,units='cm',res=400)
+  par(ps=10)
+  par(mar=c(4,4,1,1))
+  par(cex=1)
+  print({grid.arrange(plotta,plottb,ncol=2,nrow=1)})
+  dev.off()
+}
+
+new=master %>% filter(modtype!="All")
+new$mapVar=new$variable
+new$varName=NA
+
+new =new %>% mutate(varName = case_when(mapVar %in% c("anRange_temperature") ~ "Annual range temperature",
+                                        mapVar %in% c("cancer_gov_UV_exposure") ~ "UV exposure",
+                                        mapVar %in% c("mean_cloud") ~ "Mean cloud cover",
+                                        mapVar %in% c("elevation") ~ "Elevation",
+                                        mapVar %in% c("mean_temperature") ~ "Mean temperature",
+                                        mapVar %in% c("seasonality_cloud") ~ "Seasonality of cloud cover",
+                                        mapVar %in% c("seasonality_temperature") ~ "Seasonality of temperature",
+                                        mapVar %in% c("sun_exposure") ~ "Sun exposure",
+                                        mapVar %in% c("UV_daily_dose") ~ "UV daily dose",
+                                        mapVar %in% c("UV_irradiance") ~ "UV irradiance",
+                                        mapVar %in% c("incm_pc") ~ "Income per capita",
+                                        mapVar %in% c("incm_mh") ~ "Median household income",
+                                        mapVar %in% c("derm_pk") ~ "Dermatologists",
+                                        mapVar %in% c("pcp_pk") ~ "Primary care",
+                                        mapVar %in% c("docs_pk") ~ "Doctors",
+                                        mapVar %in% c("wpovr50") ~ "Households >$50,000",
+                                        mapVar %in% c("wpvr100") ~ "Households >$100,000",
+                                        mapVar %in% c("HI_65") ~ "Health insurance < age 65",
+))
+
+
+# ggplot(dat=master,aes(x=reorder(rsq_fixed),y=intercept))+geom_point(aes(color=variable,shape=modtype))
+label_data2 <- new %>% group_by(varName) %>%
+  summarise(sum=sum(rsq_fixed)) %>%
+  arrange(desc(sum))
+label_data2$id <- c(1:nrow(label_data2))
+
+
+# calculate the ANGLE of the labels
+number_of_bar <- nrow(label_data2)
+angle <-  90 - 360 * ( label_data2$id-.5 )  /number_of_bar    
+
+# calculate the alignment of labels: right or left
+# If I am on the left part of the plot, my labels have currently an angle < -90
+label_data2$hjust<-ifelse( angle < -90, 1, 0)
+
+# flip angle to make them readable
+label_data2$angle<-ifelse(angle < -90, angle+180, angle)
+
+# find order of countries to use for scale_x, turn into factor
+order <- label_data2$varName
+order <- c(order)
+order <- factor(order, levels=order)
+
+pal <- c("darkgreen","red","#darkgreen")
+
+map=ggplot(dat=new,aes(x=varName,rsq_fixed))+geom_bar(aes(group=modtype,fill=modtype),stat="identity")+
+  scale_x_discrete(limits=order)+
+  scale_fill_manual("Breast cancer type",values=pal)+
+  theme_void() +
+  #cale_fill_manual("Melanoma type",values=c("All"="red","Invasive"="blue","In.situ"="grey"))+
+  coord_polar(direction = 1,
+              clip = "off") +ylim(-.05,.5)+
+  geom_text(data=label_data2, aes(x=id, y=sum+.03, label=varName, hjust=hjust), 
+            color="black", fontface="bold",alpha=0.6, size=2, 
+            angle= label_data2$angle, inherit.aes = FALSE ) +
+  theme(plot.margin = margin(1, 1, 1, 1, "cm"))+
+  theme(legend.title = element_text(size=2),legend.position=c(.3,.8),legend.key.width = unit(.3, "cm"),legend.key.height = unit(.2, "cm"))+theme(legend.text=element_text(size=4),legend.title = element_text(size=5))
+
+map=map+  #annotate(geom="text",
+  #                  x="Households >$50,000",y=.45,
+  #                  label="0.45-",
+  #                  hjust=3.0,
+  #                  size=1.5,
+  #                  color="black",
+  #                  alpha=.7) +
+  # annotate(geom="text",
+  #             x="Households >$50,000",y=.35,
+  #             label="0.35-",
+  #             hjust=2.6,
+  #             size=1.5,
+#             color="black",
+#             alpha=.7)+
+annotate(geom="text",
+         x="Households >$100,000",y=.25,
+         label=".25-",
+         hjust=2.2,
+         size=1.5,
+         color="black",
+         alpha=.7)
+map
+
+outdir="/Users/heatherwelch/Dropbox/melenoma/Figures_04_20_20"
+png(glue("{outdir}/rsq_rose_bc.png"),width=12,height=14,units='cm',res=400)
+par(ps=10)
+par(mar=c(1,1,1,1))
+par(cex=1)
+print({map})
+dev.off()
+
+
  #####
 
 
