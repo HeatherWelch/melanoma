@@ -39,3 +39,8 @@ master3=master2[complete.cases(master2$mortality_rate),]
 master4=master3 %>% dplyr::select(c(SEER_rate,cancer_gov_UV_exposure,mortality_rate)) %>% gather(type,rate,-cancer_gov_UV_exposure)
 write.csv(master3,"/Users/heatherwelch/Dropbox/melenoma/mortality/incidence_mortality_exposure_hip.csv")
 ggplot(data=master4)+geom_point(aes(y=cancer_gov_UV_exposure,x=rate))+geom_smooth(aes(y=cancer_gov_UV_exposure,x=rate),method = "lm")+facet_wrap(~type,scales="free")
+
+# new stuff dad for dad 04-07-20 larger data frame
+master2=left_join(master,c,by="COUNTY_FIPS") %>% left_join(.,d,by="COUNTY_FIPS") %>% dplyr::select(-X)
+master3=master2[complete.cases(master2$mortality_rate),]
+write.csv(master3,"/Users/heatherwelch/Dropbox/melenoma/mortality/incidence_mortality_exposure_hip_fullDF.csv")
