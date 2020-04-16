@@ -33,13 +33,14 @@ write.csv(M,glue("{outdir}/corMatrix_unweighted.csv"))
 # weighted wtd.cors ####
 library(weights)
 test=wtd.cors(new,weight = pop)
-map=corrplot(test,type="upper",order="hclust",outline = T,tl.col="black",tl.cex = .9)
+test2=test[c(2,6,3,4,5,1,8,7,9,10,11),c(2,6,3,4,5,1,8,7,9,10,11)]
+map=corrplot(test2,type="upper",order="original",outline = T,tl.col="black",tl.cex = .9)
 
 png(glue("{outdir}/corplot_weighted_wtd.cors.png"),width=15,height=15,type = "cairo",units='cm',res=400)
 par(ps=10)
 par(mar=c(4,4,1,1))
 par(cex=1)
-corrplot(test,type="upper",order="hclust",outline = T,tl.col="black",tl.cex = .9)
+corrplot(test2,type="upper",order="original",outline = T,tl.col="black",tl.cex = .9)
 dev.off()
 
 write.csv(test,glue("{outdir}/corMatrix_weighted_wtd.cors.csv"))
@@ -47,13 +48,14 @@ write.csv(test,glue("{outdir}/corMatrix_weighted_wtd.cors.csv"))
 # weighted wtd.cor ####
 library(weights)
 test=wtd.cor(x=new, weight=pop)
-map=corrplot(test$correlation,type="upper",order="hclust",outline = T,tl.col="black",tl.cex = .9)
+test2=test$correlation[c(2,6,3,4,5,1,8,7,9,10,11),c(2,6,3,4,5,1,8,7,9,10,11)]
+map=corrplot(test2,type="upper",order="original",outline = T,tl.col="black",tl.cex = .9)
 
 png(glue("{outdir}/corplot_weighted_wtd.cor.png"),width=15,height=15,type = "cairo",units='cm',res=400)
 par(ps=10)
 par(mar=c(4,4,1,1))
 par(cex=1)
-corrplot(test$correlation,type="upper",order="hclust",outline = T,tl.col="black",tl.cex = .9)
+corrplot(test2,type="upper",order="original",outline = T,tl.col="black",tl.cex = .9)
 dev.off()
 
 write.csv(test$correlation,glue("{outdir}/corMatrix_weighted_wtd.cor.csv"))
