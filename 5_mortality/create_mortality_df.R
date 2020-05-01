@@ -44,3 +44,13 @@ ggplot(data=master4)+geom_point(aes(y=cancer_gov_UV_exposure,x=rate))+geom_smoot
 master2=left_join(master,c,by="COUNTY_FIPS") %>% left_join(.,d,by="COUNTY_FIPS") %>% dplyr::select(-X)
 master3=master2[complete.cases(master2$mortality_rate),]
 write.csv(master3,"/Users/heatherwelch/Dropbox/melenoma/mortality/incidence_mortality_exposure_hip_fullDF.csv")
+
+
+### mortality scatter
+new=master2 %>% dplyr::select(SEER_rate,mortality_rate,cancer_gov_UV_exposure)
+
+ggplot(new,aes(x=SEER_rate,y=mortality_rate,size=cancer_gov_UV_exposure))+geom_point(alpha=.3)+
+  scale_size_binned()(range = c(0, 10))
+  
+  
+  
