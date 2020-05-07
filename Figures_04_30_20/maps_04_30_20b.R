@@ -55,7 +55,7 @@ mappfunction=function(dat,mapVar){
     varName="Dermatologists per 100,000"
     subtitle="none"
   } else if (mapVar=="pcp_pk"){
-    varName="Primary Care Practitioners per 100,000"
+    varName="Primary Care Physicians per 100,000"
     subtitle="none"
   } else if (mapVar=="docs_pk"){
     varName="Doctors"
@@ -71,6 +71,7 @@ mappfunction=function(dat,mapVar){
     subtitle="none"
   }
   # dat=dat[1:10,]
+  if(grepl("seasonality_temperature",mapVar)){dat=dat %>% mutate(seasonality_temperature=seasonality_temperature/10)} ### fixing temperature
   datt=dat %>% mutate(new=.data[[mapVar]])
   labels=pretty(datt$new,n=5)
   if(grepl("Income",varName)){labels2=dollar(labels)
@@ -79,11 +80,16 @@ mappfunction=function(dat,mapVar){
   } else if(grepl("Health",varName)){labels2=percent(labels/100)
   } else if(grepl("cloud",mapVar)){labels2=percent(labels/100)
   } else if(grepl("temperature",mapVar)){labels2=glue("{labels}°C")
+  } else if(grepl("elevation",mapVar)){labels2=glue("{labels} m")
+  } else if(grepl("cancer_gov_UV_exposure",mapVar)){labels2=glue("{labels} mw/m2")
+  } else if(grepl("UV_daily_dose",mapVar)){labels2=glue("{labels} j/m2")
+  } else if(grepl("UV_irradiance",mapVar)){labels2=glue("{labels} mw/m2")
+  } else if(grepl("sun_exposure",mapVar)){labels2=glue("{labels} kj/m2")
   } else {labels2=labels}
   
   if(varName=="Health insurance"||varName=="% non-Hispanic white households with income > $100,000"||
      varName=="% non-Hispanic white households with income > $50,000"||varName=="Doctors"||
-     varName=="Primary Care Practitioners per 100,000"||
+     varName=="Primary Care Physicians per 100,000"||
      varName=="Dermatologists per 100,000"||varName=="Melanoma incidence in non-Hispanic whites"||
      varName=="Median Household Income"||varName=="Income per capita"){
     map=ggplot(data=dat)+geom_sf(aes(fill=ntile(.data[[mapVar]],100)), size = 0.4,color="black")+ theme(panel.background = element_blank())+ theme(axis.line = element_line(colour = "black"))+
@@ -102,7 +108,7 @@ mappfunction=function(dat,mapVar){
             plot.background=element_blank())+
       theme(legend.title = element_text(size=8),legend.position=c(.92,.4),legend.key.width = unit(1.5, "cm"),legend.key.height = unit(1.4, "cm"))+theme(legend.text=element_text(size=12),legend.title = element_text(size=9))+
       ggtitle(varName)+
-      theme(plot.title = element_text(size = 30, face = "bold"),plot.subtitle=element_text(size=26))
+      theme(plot.title = element_text(size = 30, face = "bold",vjust = -1),plot.subtitle=element_text(size=26,vjust = -2))
   } else {
     map=ggplot(data=dat)+geom_sf(aes(fill=.data[[mapVar]]), size = 0.4,color="black")+ theme(panel.background = element_blank())+ theme(axis.line = element_line(colour = "black"))+
       scale_fill_gradientn("",breaks=labels,labels=labels2,colours = pals::parula(100),na.value="black")+
@@ -120,7 +126,7 @@ mappfunction=function(dat,mapVar){
             plot.background=element_blank())+
       theme(legend.title = element_text(size=8),legend.position=c(.92,.4),legend.key.width = unit(1.5, "cm"),legend.key.height = unit(1.4, "cm"))+theme(legend.text=element_text(size=12),legend.title = element_text(size=9))+
       ggtitle(varName)+
-      theme(plot.title = element_text(size = 30, face = "bold"),plot.subtitle=element_text(size=26))
+      theme(plot.title = element_text(size = 30, face = "bold",vjust = -1),plot.subtitle=element_text(size=26,vjust = -2))
   }
   
   if(subtitle!="none"){map=map+ggsubtitle(subtitle)}
