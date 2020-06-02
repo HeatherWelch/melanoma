@@ -73,7 +73,7 @@ mappfunction=function(dat,mapVar){
   # dat=dat[1:10,]
   if(grepl("seasonality_temperature",mapVar)){dat=dat %>% mutate(seasonality_temperature=seasonality_temperature/10)} ### fixing temperature
   datt=dat %>% mutate(new=.data[[mapVar]])
-  labels=pretty(datt$new,n=5)
+  labels=pretty(datt$new,n=3)
   if(grepl("Income",varName)){labels2=dollar(labels)
   } else if(grepl("Income",varName)){labels2=dollar(labels)
   } else if(grepl("households",varName)){labels2=percent(labels/100)
@@ -106,7 +106,7 @@ mappfunction=function(dat,mapVar){
             panel.grid.major=element_blank(),
             panel.grid.minor=element_blank(),
             plot.background=element_blank())+
-      theme(legend.title = element_text(size=8),legend.position=c(.92,.4),legend.key.width = unit(1.5, "cm"),legend.key.height = unit(1.4, "cm"))+theme(legend.text=element_text(size=12),legend.title = element_text(size=9))+
+      theme(legend.title = element_text(size=8),legend.position=c(.92,.4),legend.key.width = unit(1.5, "cm"),legend.key.height = unit(1.4, "cm"))+theme(legend.text=element_text(size=16),legend.title = element_text(size=9))+
       ggtitle(varName)+
       theme(plot.title = element_text(size = 30, face = "bold",vjust = -1),plot.subtitle=element_text(size=26,vjust = -2))
   } else {
@@ -124,7 +124,7 @@ mappfunction=function(dat,mapVar){
             panel.grid.major=element_blank(),
             panel.grid.minor=element_blank(),
             plot.background=element_blank())+
-      theme(legend.title = element_text(size=8),legend.position=c(.92,.4),legend.key.width = unit(1.5, "cm"),legend.key.height = unit(1.4, "cm"))+theme(legend.text=element_text(size=12),legend.title = element_text(size=9))+
+      theme(legend.title = element_text(size=8),legend.position=c(.92,.4),legend.key.width = unit(1.5, "cm"),legend.key.height = unit(1.4, "cm"))+theme(legend.text=element_text(size=16),legend.title = element_text(size=9))+
       ggtitle(varName)+
       theme(plot.title = element_text(size = 30, face = "bold",vjust = -1),plot.subtitle=element_text(size=26,vjust = -2))
   }

@@ -18,14 +18,23 @@ pop=new$Melanoma_incidence_pop %>% gsub(",","",.) %>% as.numeric()
 new=new %>% dplyr::select(-Melanoma_incidence_pop)
 
 # unweighted ####
+library(RColorBrewer)
+scalebluered <- colorRampPalette(brewer.pal(8, "RdBu"))(8)
 M <- cor(new)
-map=corrplot(M,type="upper",order="hclust",outline = T,tl.col="black",tl.cex = .9)
+corrplot(M,type="upper",order="hclust",outline = T,tl.col="black",tl.cex = .9,, cl.pos="n")
+corrplot(M ,order="hclust",outline = T,tl.cex = .9,tl.col="black", 
+          type="upper", cl.pos="n",mar = c(5, 5, 5, 5))
+colorlegend(scalebluered, xlim=c(13,15), ylim=c(11,7),c(seq(-1,1,.5)),align="l", vertical=TRUE, addlabels=TRUE,
+            cex = 0.5)
 
-png(glue("{outdir}/corplot_unweighted.png"),width=15,height=15,type = "cairo",units='cm',res=400)
+png(glue("{outdir}/corplot_unweighted2.png"),width=15,height=15,type = "cairo",units='cm',res=400)
 par(ps=10)
 par(mar=c(4,4,1,1))
 par(cex=1)
-corrplot(M,type="upper",order="hclust",outline = T,tl.col="black",tl.cex = .9)
+corrplot(M ,order="hclust",outline = T,tl.cex = .9,tl.col="black", 
+         type="upper", cl.pos="n",mar = c(6, 7, 7, 7))
+colorlegend(scalebluered, xlim=c(13,15), ylim=c(11,7),c(seq(-1,1,.5)),align="l", vertical=TRUE, addlabels=TRUE,
+            cex = 0.9)
 dev.off()
 
 write.csv(M,glue("{outdir}/corMatrix_unweighted.csv"))
