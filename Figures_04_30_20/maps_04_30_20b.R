@@ -1,13 +1,16 @@
 ### making maps
 
 source('/Users/heatherwelch/Dropbox/melenoma/melanoma_GitHub/utilities/load_libraries.R')
+library(ggnewscale)
 master=read.csv("/Users/heatherwelch/Dropbox/melenoma/Figures_04_30_20/master_dataframe_04_30_20.csv") %>% mutate(COUNTY_FIPS=as.character(str_pad(COUNTY_FIPS, 5, pad = "0")))%>% mutate(STATEFP=as.character(STATEFP)) %>% dplyr::select(-c(STATEFP))
+b=master %>% filter(COUNTY_FIPS=="49043"|COUNTY_FIPS=="35025") %>% 
+  mutate(name=c("Lea","Summit"))#first is summit ut, second it lea NM
 
 studyarea=st_read(glue("/Users/heatherwelch/Dropbox/melenoma/us_shapefiles/tl_2017_us_county/tl_2017_us_county.shp"))
 studyarea=studyarea %>% mutate(COUNTY_FIPS=as.character(glue("{STATEFP}{COUNTYFP}")))
 
 outdir="/Users/heatherwelch/Dropbox/melenoma/Figures_04_30_20/maps"
-dat=full_join(studyarea,master,by="COUNTY_FIPS")
+dat=full_join(studyarea,master,by="COUNTY_FIPS") %>% filter(STATEFP!="02"&STATEFP!="15"&STATEFP!="72"&STATEFP!="78"&STATEFP!="60"&STATEFP!="66"&STATEFP!="69")
 
 library(scales)
 
@@ -31,10 +34,10 @@ mappfunction=function(dat,mapVar){
     varName="Mean temperature"
     subtitle="none"
   } else if (mapVar=="seasonality_cloud"){
-    varName="Cloud Seasonality"
+    varName="Cloud Variability"
     subtitle="(SD of mean monthly cloud cover)"
   } else if (mapVar=="seasonality_temperature"){
-    varName="Temperature Seasonality"
+    varName="Temperature Variability"
     subtitle="(SD of mean monthly temperature)"
   } else if (mapVar=="sun_exposure"){
     varName="Sun exposure"
@@ -73,7 +76,13 @@ mappfunction=function(dat,mapVar){
   # dat=dat[1:10,]
   if(grepl("seasonality_temperature",mapVar)){dat=dat %>% mutate(seasonality_temperature=seasonality_temperature/10)} ### fixing temperature
   datt=dat %>% mutate(new=.data[[mapVar]])
-  labels=pretty(datt$new,n=3)
+  
+  if(varName=="Primary Care Physicians per 100,000"||varName=="Dermatologists per 100,000"||varName=="Doctors"){
+  dattt=datt %>% filter(new>0)
+  labels=extended_breaks(n=4)(dattt$new) #%>% rescale(.,c(min(dattt$new,na.rm=T),max(dattt$new,na.rm=T))) %>% round(.,digits=0)
+  } else {labels=extended_breaks(n=4)(datt$new) #%>% rescale(.,c(min(datt$new,na.rm=T),max(datt$new,na.rm=T))) %>% round(.,digits=0)
+  }
+  
   if(grepl("Income",varName)){labels2=dollar(labels)
   } else if(grepl("Income",varName)){labels2=dollar(labels)
   } else if(grepl("households",varName)){labels2=percent(labels/100)
@@ -88,11 +97,9 @@ mappfunction=function(dat,mapVar){
   } else {labels2=labels}
   
   if(varName=="Health insurance"||varName=="% non-Hispanic white households with income > $100,000"||
-     varName=="% non-Hispanic white households with income > $50,000"||varName=="Doctors"||
-     varName=="Primary Care Physicians per 100,000"||
-     varName=="Dermatologists per 100,000"||varName=="Melanoma incidence in non-Hispanic whites"||
+     varName=="% non-Hispanic white households with income > $50,000"||varName=="Melanoma incidence in non-Hispanic whites"||
      varName=="Median Household Income"||varName=="Income per capita"){
-    map=ggplot(data=dat)+geom_sf(aes(fill=ntile(.data[[mapVar]],100)), size = 0.4,color="black")+ theme(panel.background = element_blank())+ theme(axis.line = element_line(colour = "black"))+
+    map=ggplot()+geom_sf(data=dat,aes(fill=ntile(.data[[mapVar]],100)), size = 0.4,color="black")+ theme(panel.background = element_blank())+ theme(axis.line = element_line(colour = "black"))+
       scale_fill_gradientn("",breaks=rescale(labels,c(0,100)),labels=labels2,colours = pals::parula(100),na.value="black")+
       coord_sf(xlim = c(-125.0011, -66.9326),ylim = c(24.9493,49.5904))+
       theme(axis.line=element_blank(),
@@ -108,7 +115,32 @@ mappfunction=function(dat,mapVar){
             plot.background=element_blank())+
       theme(legend.title = element_text(size=8),legend.position=c(.92,.4),legend.key.width = unit(1.5, "cm"),legend.key.height = unit(1.4, "cm"))+theme(legend.text=element_text(size=16),legend.title = element_text(size=9))+
       ggtitle(varName)+
-      theme(plot.title = element_text(size = 30, face = "bold",vjust = -1),plot.subtitle=element_text(size=26,vjust = -2))
+      theme(plot.title = element_text(size = 33, face = "bold",vjust = -1),plot.subtitle=element_text(size=29,vjust = -2))
+    
+  } else if(varName=="Primary Care Physicians per 100,000"||varName=="Dermatologists per 100,000"||varName=="Doctors"){
+      dat2=datt %>% filter(new==0)
+      dat3=datt %>% filter(new>0.00000001)
+      map=ggplot()+geom_sf(data=dat3,aes(fill=ntile(.data[[mapVar]],100)), size = 0.4,color="black")+ theme(panel.background = element_blank())+ theme(axis.line = element_line(colour = "black"))+
+        scale_fill_gradientn("",breaks=rescale(labels,c(0,100)),labels=labels2,colours = pals::parula(100),na.value="black")+
+        coord_sf(xlim = c(-125.0011, -66.9326),ylim = c(24.9493,49.5904))+
+        theme(axis.line=element_blank(),
+              axis.text.x=element_blank(),
+              axis.text.y=element_blank(),
+              axis.ticks=element_blank(), 
+              axis.title.x=element_blank(),
+              axis.title.y=element_blank(),
+              panel.background=element_blank(),
+              panel.border=element_blank(),
+              panel.grid.major=element_blank(),
+              panel.grid.minor=element_blank(),
+              plot.background=element_blank())+
+        theme(legend.title = element_text(size=8),legend.position=c(.92,.3),legend.key.width = unit(1.5, "cm"),legend.key.height = unit(1.4, "cm"))+theme(legend.text=element_text(size=16),legend.title = element_text(size=9))+
+        ggtitle(varName)+
+        theme(plot.title = element_text(size = 33, face = "bold",vjust = -1),plot.subtitle=element_text(size=29,vjust = -2))
+      
+        map=map+new_scale_fill()+geom_sf(data=dat2,aes(fill=as.factor(new)),size = 0.4,color="black")+
+        scale_fill_manual("",values=c("0"="red"),labels=c("0"="Zero"))+
+        coord_sf(xlim = c(-125.0011, -66.9326),ylim = c(24.9493,49.5904))
   } else {
     map=ggplot(data=dat)+geom_sf(aes(fill=.data[[mapVar]]), size = 0.4,color="black")+ theme(panel.background = element_blank())+ theme(axis.line = element_line(colour = "black"))+
       scale_fill_gradientn("",breaks=labels,labels=labels2,colours = pals::parula(100),na.value="black")+
@@ -126,7 +158,7 @@ mappfunction=function(dat,mapVar){
             plot.background=element_blank())+
       theme(legend.title = element_text(size=8),legend.position=c(.92,.4),legend.key.width = unit(1.5, "cm"),legend.key.height = unit(1.4, "cm"))+theme(legend.text=element_text(size=16),legend.title = element_text(size=9))+
       ggtitle(varName)+
-      theme(plot.title = element_text(size = 30, face = "bold",vjust = -1),plot.subtitle=element_text(size=26,vjust = -2))
+      theme(plot.title = element_text(size = 33, face = "bold",vjust = -1),plot.subtitle=element_text(size=29,vjust = -2))
   }
   
   if(subtitle!="none"){map=map+ggsubtitle(subtitle)}

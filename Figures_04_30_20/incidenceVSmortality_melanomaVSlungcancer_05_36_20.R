@@ -40,6 +40,9 @@ setdiff(mel_counties,all_counties)
 test=master %>% .[complete.cases(.),]
 
 write.csv(test, "/Users/heatherwelch/Dropbox/melenoma/congruent_LC_mel_incidence_mortality/cancers_combined.csv")
+a=read.csv("/Users/heatherwelch/Dropbox/melenoma/congruent_LC_mel_incidence_mortality/cancers_combined.csv")
+b=a %>% filter(COUNTY_FIPS=="49043"|COUNTY_FIPS=="35025") %>% 
+  mutate(name=c("Lea","Summit"))#first is summit ut, second it lea NM
 
   
 # lc_m=read.csv("/Users/heatherwelch/Dropbox/melenoma/congruent_LC_mel_incidence_mortality/LC_mortality_02-17.csv") %>% 
