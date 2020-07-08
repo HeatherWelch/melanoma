@@ -306,10 +306,13 @@ lmm_inta=lmm_summarya$coefficients[1]
 lmm_slopea=lmm_summarya$coefficients[2]
 
 new1=new1 %>% mutate(Population=as.numeric(Population)) 
-new1=new %>% arrange(desc(Population))%>% filter(COUNTY_FIPS!=6037)  %>% filter(location=="Eastern seaboard"||location=="California")
-dd=new1 %>% dplyr::select(-c(COUNTY_FIPS,STATEFP,State.y,state,location))
+new1=new %>% arrange(desc(Population))%>% filter(COUNTY_FIPS!=06037)  #%>% filter(location=="Eastern seaboard"||location=="California")
+new1=new %>% arrange(desc(Population))%>% filter(COUNTY_FIPS!=06073&COUNTY_FIPS!=06059)
+new1=new
+dd=new1 %>% dplyr::select(-c(COUNTY_FIPS,STATEFP,State.y))
 weight=dd$Population
 wtd.cors(dd,weight=weight)
+cor(dd)
 
 b=ggplot()+geom_point(data=new1,aes(x=`*UV Daily Dose*`,y=`NHW MELANOMA INCIDENCE`,size=as.numeric(Population),alpha=as.numeric(Population),color=as.factor(location)))+
   scale_color_manual("State",values=c("California"="blue",
@@ -356,3 +359,113 @@ par(cex=1)
 plot_grid(a,b, ncol=2, align="h",axis = "bt")
 dev.off()
 
+### new stuff from dad's email "next steps"
+master=read.csv("/Users/heatherwelch/Dropbox/melenoma/Figures_04_30_20/master_dataframe_04_30_20.csv") 
+colnames(master) <- make.unique(names(master))
+new=master %>% rename("*Temperature Variability*"=seasonality_temperature) %>% 
+  rename("*Dermatologists*"=derm_pk) %>% 
+  rename("NHW MELANOMA INCIDENCE"=Melanoma_incidence) %>% 
+  rename("*UV Daily Dose*"=cancer_gov_UV_exposure) %>% 
+  rename("*Elevation*"=elevation) %>% 
+  rename("*Primary care*"=pcp_pk) %>% 
+  rename("*Cloud Variability*"=seasonality_cloud) %>% 
+  rename("*UV Solar Noon*"=UV_irradiance) %>% 
+  rename("*Median Household*"=incm_mh) %>% 
+  rename("*Income per capita*"=incm_pc) %>% 
+  rename("*Households >$50,000*"=wpovr50) %>% 
+  rename("Population"=Melanoma_incidence_pop)%>% 
+  rename("Temperature range"=anRange_temperature)%>% 
+  rename("Cloud"=mean_cloud)%>% 
+  rename("Temperature"=mean_temperature)%>% 
+  rename("Sun exposure"=sun_exposure)%>% 
+  rename("UV daily dose CDC"=UV_daily_dose)%>% 
+  rename("Doctors"=docs_pk)%>% 
+  rename("Households >$100,000"=wpvr100)%>% 
+  rename("Health insurance < 65"="HI_65")
+
+new=new %>% dplyr::select(-c(X,NAME,COUNTY_,Melanoma_mortality_county_name,Melanoma_mortality_count,Melanoma_mortality_pop,CTYNAME,hisp_metric_2010_all_ages,hisp_metric_2010_over40,county,Breast_cancer_NHWinsitu,
+                             Breast_cancer_NHWinvasive,Breast_cancer_NHWfemalePop,County,Melanoma_incidence_In_situ,Melanoma_incidence_Invasive,State.x,Lung_cancer_incidence,Lung_cancer_incidence_count,Lung_cancer_incidence_pop,Lung_cancer_mortality,
+                             County,Lung_cancer_mortality_count,Lung_cancer_mortality_pop,Melanoma_mortality)) %>% 
+  .[complete.cases(.),]
+
+colors=c("#4f3071",
+         "#71b245",
+         "#6f4acb",
+         "#c1953b",
+         "#ca4abf",
+         "#59b298",
+         "#c74d2e",
+         "#688db6",
+         "#c4426d",
+         "#485b33",
+         "#b683c2",
+         "#a9a381",
+         "#4e2d33",
+         "#be7c74",
+         "black")
+
+new=new %>% mutate(state=strtrim(State.y,4)) %>% mutate(location=case_when(STATEFP=="35" ~ "Other",
+                                                                           STATEFP=="36" ~ "Northeast corridor",
+                                                                           STATEFP=="25" ~ "Northeast corridor",
+                                                                           STATEFP=="9" ~ "Northeast corridor",
+                                                                           STATEFP=="34" ~ "Northeast corridor",
+                                                                           # STATEFP=="22" ~ "Northeast corridor",
+                                                                           STATEFP=="13" ~ "Georgia/Lousiana",
+                                                                           STATEFP=="6" ~ "California",
+                                                                           STATEFP=="49" ~ "Other",
+                                                                           STATEFP=="22" ~ "Georgia/Lousiana",
+                                                                           STATEFP=="16" ~ "Other",
+                                                                           STATEFP=="IA" ~ "Other",
+                                                                           STATEFP=="26" ~ "Other",
+                                                                           STATEFP=="53" ~ "Washington",
+                                                                           STATEFP=="21" ~ "Other",
+                                                                           STATEFP=="19" ~ "Other",
+                                                                           
+                                                                           TRUE ~ "Other"))
+
+new1=new %>% mutate(Population=as.numeric(Population/5))
+a=ggplot(data=new1,aes(x=`*UV Daily Dose*`,y=`NHW MELANOMA INCIDENCE`))+geom_point(aes(size=Population,color=as.factor(location),alpha=Population))+
+  scale_color_manual("State",values=c("California"="darkred",
+                                      "Northeast corridor"="goldenrod",
+                                      "Kentucky"="yellow",
+                                      "Utah"="lightgrey",
+                                      "Other"="darkgrey",
+                                      "Idaho"="lightblue",
+                                      "Georgia/Lousiana"="chartreuse3",
+                                      "Michigan"="orange",
+                                      "Washington"="springgreen4",
+                                      "New Mexico"="maroon",
+                                      "Iowa"="black",
+                                      "Georgia"="lightcyan2"
+  ))+
+  scale_size_continuous(breaks=c(50000,100000,1000000),labels = comma)+
+  geom_smooth(se=F,method="lm",color="black")+geom_smooth(se=F,method="lm",color="blue",aes(weight=Population))
+
+#+
+  # geom_abline(slope=lm_slope,intercept = lm_int,color="red",size=1)+geom_abline(slope=lmm_slope,intercept = lmm_int,color="blue")+
+  # scale_size(range = c(1,10),breaks=pretty(new$Population,5),labels = pretty(new$Population,5))
+a
+
+new2=new1 %>% filter(location!="California"&location!="Northeast corridor"&location!="Washington")
+
+a=ggplot(data=new2,aes(x=`*UV Daily Dose*`,y=`NHW MELANOMA INCIDENCE`))+geom_point(aes(size=Population,color=as.factor(location)))+
+  scale_color_manual("State",values=c("California"="darkred",
+                                      "Northeast corridor"="goldenrod",
+                                      "Kentucky"="yellow",
+                                      "Utah"="lightgrey",
+                                      "Other"="darkgrey",
+                                      "Idaho"="lightblue",
+                                      "Georgia/Lousiana"="chartreuse3",
+                                      "Michigan"="orange",
+                                      "Washington"="springgreen4",
+                                      "New Mexico"="maroon",
+                                      "Iowa"="black",
+                                      "Georgia"="lightcyan2"
+  ))+
+  scale_size_continuous(breaks=c(50000,100000,1000000),labels = comma)+
+  geom_smooth(se=F,method="lm",color="black")+geom_smooth(se=F,method="lm",color="blue",aes(weight=Population))
+
+#+
+# geom_abline(slope=lm_slope,intercept = lm_int,color="red",size=1)+geom_abline(slope=lmm_slope,intercept = lmm_int,color="blue")+
+# scale_size(range = c(1,10),breaks=pretty(new$Population,5),labels = pretty(new$Population,5))
+a
