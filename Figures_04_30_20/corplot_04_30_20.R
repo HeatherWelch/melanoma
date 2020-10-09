@@ -82,7 +82,7 @@ write.csv(math,glue("{outdir}/corMatrix_weighted_minus_unweighted_abs.csv"))
 
 
 
-# full correlation matrix for sups
+# full correlation matrix for sups ####
 
 master=read.csv("/Users/heatherwelch/Dropbox/melenoma/Figures_04_30_20/master_dataframe_04_30_20.csv") 
 colnames(master) <- make.unique(names(master))
@@ -114,6 +114,8 @@ new=new %>% dplyr::select(-c(X,COUNTY_FIPS,STATEFP,NAME,COUNTY_,Melanoma_mortali
 
 pop=new$Population %>% gsub(",","",.) %>% as.numeric()
 new2=new %>% dplyr::select(-Population)
+
+write.csv(new2,"/Users/heatherwelch/Dropbox/melenoma/Figures_04_30_20/Final_dataframe_for_paper_10-09-20.csv")
 
 M <- cor(new2)
 col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
