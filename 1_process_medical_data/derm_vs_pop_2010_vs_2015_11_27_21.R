@@ -68,50 +68,65 @@ master4=master3 %>% dplyr::select(c(All.melanoma10_11,All.melanoma15_16,derm_cou
 
 write.csv(master4,glue("{outdir}/summary_11-29-21.csv"))
 
-master4=master3 %>% dplyr::select(c(Invasive10_11,Invasive15_16,derm_count2010,derm_count2015,category)) %>% 
+### dads new idea ####
+master3=master2 %>% mutate(change_supply=derm_count2015/derm_count2010) %>% 
+  mutate(category=case_when(#is.infinite(change_supply)~"undefined",
+    change_supply<1~"Lost_derms",
+    change_supply==1~"No_change",
+    change_supply>1~"Gained_derms",
+    TRUE~as.character(change_supply)))
+
+master3 %>% group_by(category) %>% summarise(n=n())
+master4=master3 %>% dplyr::select(c(All.melanoma10_11,All.melanoma15_16,derm_count2010,derm_count2015,category)) %>% 
   gather(year,number,-c(derm_count2010,derm_count2015,category)) %>% 
   group_by(year,category) %>% summarise(mean_incidence=mean(number)) %>% 
-  spread(year,mean_incidence) %>% mutate(diff=Invasive15_16,Invasive10_11) %>% arrange(diff)
-
-test=master3 %>% mutate(test=bin_data(master3$change_supply, bins=4, binType = "quantile"))
-a=test %>% group_by(test) %>% summarise(n=n())
-summary(as.factor(master3$category1))
-a=master3 %>% dplyr::select(category1,change_supply) %>% arrange(category1)
-a=master3 %>% group_by(category1) %>% summarise(n=n())
-
-master4=master3 %>% dplyr::select(c(All.melanoma10_11,All.melanoma15_16,derm_count2010,derm_count2015,category1)) %>% 
-  gather(year,number,-c(derm_count2010,derm_count2015,category1)) %>% 
-  group_by(year,category1) %>% summarise(mean_incidence=mean(number)) %>% 
   spread(year,mean_incidence) %>% mutate(diff=All.melanoma15_16-All.melanoma10_11) %>% arrange(diff)
 
-ggplot(master4,aes(x=category,y=number,group=year,fill=year))+geom_bar(stat="identity",position = "dodge")
 
-master4=test %>% dplyr::select(c(All.melanoma10_11,All.melanoma15_16,derm_count2010,derm_count2015,test)) %>% 
-  gather(year,number,-c(derm_count2010,derm_count2015,test)) %>% 
-  group_by(year,test) %>% summarise(mean_incidence=mean(number)) %>% 
-  spread(year,mean_incidence) %>% mutate(diff=All.melanoma15_16-All.melanoma10_11) %>% arrange(diff)
-
-census=b%>% mutate(county=str_pad(COUNTY,3,"left",0)) %>% 
-  mutate(state=str_pad(STATE,2,"left",0)) %>% mutate(COUNTY_FIPS=as.character(glue("{state}{county}"))) %>% 
-  dplyr::select(COUNTY_FIPS,CTYNAME) %>% mutate(pop_2015_census=pop_2015_census,pop_2010_census=pop_2010_census)
-
-master=full_join(HRF,census) %>% dplyr::select(-f00002) %>% rename(CTYNAME_HRF=f00010,CTYNAME_census=CTYNAME) %>% 
-  .[,c(2,1,6,3,4,8,7,5)] %>% mutate(pop_2015_census_minus_HRF=pop_2015_census-pop_2015_HRF) %>% 
-  mutate(derm_rate2010_census=derm_count2010*100000/pop_2010_census) %>% 
-  mutate(derm_rate2015_census=derm_count2015*100000/pop_2015_census) %>% 
-  mutate(derm_rate2015_HRF=derm_count2015*100000/pop_2015_HRF)
-
-write.csv(master,glue("{outdir}/derm_pop_11-24-21.csv"))
-
-# # sa2=as.data.frame(sa) %>% dplyr::select(STATEFP,COUNTYFP,NAMELSAD,COUNTY_FIPS)
-# master=a %>% dplyr::select(f00002,f00012,f00011,f00010)%>% mutate(COUNTY_FIPS=as.integer(f00002)) 
+# master4=master3 %>% dplyr::select(c(Invasive10_11,Invasive15_16,derm_count2010,derm_count2015,category)) %>% 
+#   gather(year,number,-c(derm_count2010,derm_count2015,category)) %>% 
+#   group_by(year,category) %>% summarise(mean_incidence=mean(number)) %>% 
+#   spread(year,mean_incidence) %>% mutate(diff=Invasive15_16,Invasive10_11) %>% arrange(diff)
 # 
-# b2=b %>% .[,1:10] %>% mutate(county=str_pad(COUNTY,3,"left",0)) %>% 
-#   mutate(state=str_pad(STATE,2,"left",0)) %>% mutate(COUNTY_FIPS=glue("{state}{county}"))
-# test=master %>% filter(f00010=="Cuming")
-# test2=b2 %>% filter(CTYNAME=="Cuming County") %>% .[,1:13]
-# master2=left_join(sa2,master)
+# test=master3 %>% mutate(test=bin_data(master3$change_supply, bins=4, binType = "quantile"))
+# a=test %>% group_by(test) %>% summarise(n=n())
+# summary(as.factor(master3$category1))
+# a=master3 %>% dplyr::select(category1,change_supply) %>% arrange(category1)
+# a=master3 %>% group_by(category1) %>% summarise(n=n())
 # 
-# test=a %>% dplyr::select(f1198410)
-# pop=a %>% dplyr::select(f1198411) 
-#   F1198410
+# master4=master3 %>% dplyr::select(c(All.melanoma10_11,All.melanoma15_16,derm_count2010,derm_count2015,category1)) %>% 
+#   gather(year,number,-c(derm_count2010,derm_count2015,category1)) %>% 
+#   group_by(year,category1) %>% summarise(mean_incidence=mean(number)) %>% 
+#   spread(year,mean_incidence) %>% mutate(diff=All.melanoma15_16-All.melanoma10_11) %>% arrange(diff)
+# 
+# ggplot(master4,aes(x=category,y=number,group=year,fill=year))+geom_bar(stat="identity",position = "dodge")
+# 
+# master4=test %>% dplyr::select(c(All.melanoma10_11,All.melanoma15_16,derm_count2010,derm_count2015,test)) %>% 
+#   gather(year,number,-c(derm_count2010,derm_count2015,test)) %>% 
+#   group_by(year,test) %>% summarise(mean_incidence=mean(number)) %>% 
+#   spread(year,mean_incidence) %>% mutate(diff=All.melanoma15_16-All.melanoma10_11) %>% arrange(diff)
+# 
+# census=b%>% mutate(county=str_pad(COUNTY,3,"left",0)) %>% 
+#   mutate(state=str_pad(STATE,2,"left",0)) %>% mutate(COUNTY_FIPS=as.character(glue("{state}{county}"))) %>% 
+#   dplyr::select(COUNTY_FIPS,CTYNAME) %>% mutate(pop_2015_census=pop_2015_census,pop_2010_census=pop_2010_census)
+# 
+# master=full_join(HRF,census) %>% dplyr::select(-f00002) %>% rename(CTYNAME_HRF=f00010,CTYNAME_census=CTYNAME) %>% 
+#   .[,c(2,1,6,3,4,8,7,5)] %>% mutate(pop_2015_census_minus_HRF=pop_2015_census-pop_2015_HRF) %>% 
+#   mutate(derm_rate2010_census=derm_count2010*100000/pop_2010_census) %>% 
+#   mutate(derm_rate2015_census=derm_count2015*100000/pop_2015_census) %>% 
+#   mutate(derm_rate2015_HRF=derm_count2015*100000/pop_2015_HRF)
+# 
+# write.csv(master,glue("{outdir}/derm_pop_11-24-21.csv"))
+# 
+# # # sa2=as.data.frame(sa) %>% dplyr::select(STATEFP,COUNTYFP,NAMELSAD,COUNTY_FIPS)
+# # master=a %>% dplyr::select(f00002,f00012,f00011,f00010)%>% mutate(COUNTY_FIPS=as.integer(f00002)) 
+# # 
+# # b2=b %>% .[,1:10] %>% mutate(county=str_pad(COUNTY,3,"left",0)) %>% 
+# #   mutate(state=str_pad(STATE,2,"left",0)) %>% mutate(COUNTY_FIPS=glue("{state}{county}"))
+# # test=master %>% filter(f00010=="Cuming")
+# # test2=b2 %>% filter(CTYNAME=="Cuming County") %>% .[,1:13]
+# # master2=left_join(sa2,master)
+# # 
+# # test=a %>% dplyr::select(f1198410)
+# # pop=a %>% dplyr::select(f1198411) 
+# #   F1198410
