@@ -57,7 +57,7 @@ master3=master2 %>% mutate(change_supply=derm_count2015/derm_count2010) %>%
   #   TRUE~as.character(change_supply)))
 
 master3.1=master3 %>% dplyr::select(-restrict)
-write.csv(master3.1,glue("{outdir}/change_supply_11-29-21.csv"))
+# write.csv(master3.1,glue("{outdir}/change_supply_11-29-21.csv"))
 
 master3 %>% group_by(category) %>% summarise(n=n())
 
@@ -66,7 +66,7 @@ master4=master3 %>% dplyr::select(c(All.melanoma10_11,All.melanoma15_16,derm_cou
   group_by(year,category) %>% summarise(mean_incidence=mean(number)) %>% 
   spread(year,mean_incidence) %>% mutate(diff=All.melanoma15_16-All.melanoma10_11) %>% arrange(diff)
 
-write.csv(master4,glue("{outdir}/summary_11-29-21.csv"))
+# write.csv(master4,glue("{outdir}/summary_11-29-21.csv"))
 
 ### dads new idea ####
 master3=master2 %>% mutate(change_supply=derm_count2015/derm_count2010) %>% 
@@ -82,6 +82,30 @@ master4=master3 %>% dplyr::select(c(All.melanoma10_11,All.melanoma15_16,derm_cou
   group_by(year,category) %>% summarise(mean_incidence=mean(number)) %>% 
   spread(year,mean_incidence) %>% mutate(diff=All.melanoma15_16-All.melanoma10_11) %>% arrange(diff)
 
+### new idea 12.19.21 insitu vs invasive
+master_in_v_in=master3 %>% dplyr::select(c(In.situ10_11,Invasive10_11,In.situ15_16,Invasive15_16,category)) %>% 
+  mutate(Invasive=Invasive15_16-Invasive10_11, In.situ=In.situ15_16-In.situ10_11) %>% 
+  dplyr::select(c(category,Invasive,In.situ)) %>% 
+  group_by(category) %>% summarise(Invasive=mean(Invasive),In.situ=mean(In.situ)) %>% 
+  mutate(sum=Invasive+In.situ) %>% dplyr::select(-sum) %>% 
+  gather(melanoma,rate,-category) %>% 
+  mutate(category=factor(category,levels=c("Lost_derms","No_change","Gained_derms")))
+
+ggplot(master_in_v_in,aes(x=category,y=rate,fill=melanoma))+
+  geom_bar(stat="identity")
+
+  
+  gather(year,number,-c(derm_count2010,derm_count2015,category)) %>% 
+  group_by(year,category) %>% summarise(mean_incidence=mean(number))
+
+
+master_10.11=master3 %>% dplyr::select(In.situ10_11,Invasive10_11,category) %>% 
+  mutate(diff=All.melanoma15_16-All.melanoma10_11)
+
+# %>% 
+#   gather(incidence,value,-c(change_supply,category)) %>% mutate(year=)
+master_15.16=master3 %>% dplyr::select(In.situ15_16,Invasive15_16,change_supply,category) %>% 
+  gather(incidence,value,-c(change_supply,category))
 
 # master4=master3 %>% dplyr::select(c(Invasive10_11,Invasive15_16,derm_count2010,derm_count2015,category)) %>% 
 #   gather(year,number,-c(derm_count2010,derm_count2015,category)) %>% 
