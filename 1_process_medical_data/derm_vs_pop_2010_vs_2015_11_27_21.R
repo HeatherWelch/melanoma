@@ -82,6 +82,24 @@ master4=master3 %>% dplyr::select(c(All.melanoma10_11,All.melanoma15_16,derm_cou
   group_by(year,category) %>% summarise(mean_incidence=mean(number)) %>% 
   spread(year,mean_incidence) %>% mutate(diff=All.melanoma15_16-All.melanoma10_11) %>% arrange(diff)
 
+### new idea with UV ####
+master3=master2 %>% mutate(change_supply=derm_count2015/derm_count2010) %>% 
+  mutate(category=case_when(#is.infinite(change_supply)~"undefined",
+    change_supply<1~"Lost_derms",
+    change_supply==1~"No_change",
+    change_supply>1~"Gained_derms",
+    TRUE~as.character(change_supply))) %>% 
+  mutate(COUNTY_FIPS=as.integer(COUNTY_FIPS))
+
+big_df=read.csv("/Users/heatherwelch/Dropbox/melenoma/Figures_12_02_21/master_dataframe_12_02_21.csv") %>%
+  dplyr::select(c(cancer_gov_UV_exposure,COUNTY_FIPS)) %>% 
+  .[complete.cases(.),]
+
+master4=left_join(master3,big_df)%>% dplyr::select(c(cancer_gov_UV_exposure,All.melanoma10_11,All.melanoma15_16,derm_count2010,derm_count2015,category)) %>% 
+  gather(year,number,-c(derm_count2010,derm_count2015,category,cancer_gov_UV_exposure)) %>% 
+  group_by(year,category) %>% summarise(mean_incidence=mean(number),mean_uv=mean(cancer_gov_UV_exposure)) %>% 
+  spread(year,mean_incidence) %>% mutate(diff=All.melanoma15_16-All.melanoma10_11) %>% arrange(diff)
+
 ### new idea 12.19.21 insitu vs invasive
 master_in_v_in=master3 %>% dplyr::select(c(In.situ10_11,Invasive10_11,In.situ15_16,Invasive15_16,category)) %>% 
   mutate(Invasive=Invasive15_16-Invasive10_11, In.situ=In.situ15_16-In.situ10_11) %>% 
